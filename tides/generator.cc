@@ -1093,7 +1093,7 @@ void Generator::FillBufferHarmonic() {
       if (mode == GENERATOR_MODE_AR) { // power of two harmonics
         if (harm == kNumHarmonicsPowers) break;
         if ((harm & 3) == 0)
-          tn = Interpolate1121(wav_sine1024, phase_ << harm);
+          tn = Interpolate1022(wav_sine1024, phase_ << harm);
         else
           tn = 2 * ((tn * tn) >> 15) - 32768;
       } else if (mode == GENERATOR_MODE_AD) { // odd harmonics
