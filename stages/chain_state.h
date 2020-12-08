@@ -197,7 +197,7 @@ class ChainState {
                 0.98f,
                 0.0f,
                 1.0f);
-          // If in fast range, constrain slider values to first 2/3 of the pot's travel
+          // If in fast range, set slider range to 1 millisecond to ~2.2 seconds
           case 0x0100:
             return block.cv_slider_alt(
                 i,
