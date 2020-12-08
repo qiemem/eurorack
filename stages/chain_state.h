@@ -185,8 +185,36 @@ class ChainState {
     // and a `switch` with flipped cases.
     switch (seg_config & 0x03) {
       case segment::TYPE_RAMP:
+      {
+        if (loop_status_[i] == LOOP_STATUS_SELF) {
+          return block.cv_slider[i];
+        }
+        const int range = seg_config & 0x0300;
+        if (range == 0x0200) {
+          // If in slow range, set slider min to 16 seconds and max to 1125 seconds
+          return block.cv_slider_alt(
+              i,
+              1.0f,
+              1.0f,
+              0.0f,
+              1.0f);
+        } else if (range == 0x0100) {
+          // If in fast range, constrain slider values to first 2/3 of the pot's travel
+          return block.cv_slider_alt(
+              i,
+              0.0f,
+              0.6667f,
+              0.0f,
+              1.0f);
+        } else {
+          // If in default range, retain slider range of 1 millisecond to 16 seconds
+          return block.cv_slider[i];
+        }
+      }
       case segment::TYPE_TURING:
+      {
         return block.cv_slider[i];
+      }
       default:
         {
           uint8_t scale = seg_config >> 12 & 0x03;

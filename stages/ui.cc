@@ -133,6 +133,14 @@ void Ui::Poll() {
         if (settings_->in_seg_gen_mode()) {
           switch (seg_config[i] & 0x3) {
             case 0: // ramp
+              seg_config[i] &= ~0x0300; // reset range bits
+              if (slider < 0.25) {
+                seg_config[i] |= 0x0100;
+              } else if (slider > 0.75) {
+                seg_config[i] |= 0x0200;
+              }
+              // default middle range is 0, so no else
+              break;
             case 3: // random
               if (chain_state_->loop_status(i) == ChainState::LOOP_STATUS_SELF) {
                 seg_config[i] &= ~0x0300; // reset range bits
