@@ -189,7 +189,7 @@ class ChainState {
           return block.cv_slider[i];
         }
         switch (seg_config & 0x0300) {
-          // If in slow range, set slider min to 16 seconds and max to 800 seconds
+          // If in slow range, set slider min to 16 seconds and max to ~13.4 minutes
           case 0x0200:
             return block.cv_slider_alt(
                 i,
