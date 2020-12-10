@@ -261,11 +261,17 @@ void Ui::MultiModeToggle(const uint8_t i) {
   }
 }
 
-inline uint8_t Ui::FadePattern(uint8_t shift, uint8_t phase) const {
+inline uint8_t Ui::FadePattern(uint8_t shift, uint8_t phase, bool ramp) const {
   uint8_t x = system_clock.milliseconds() >> shift;
   x += phase;
-  x &= 0x1f;
-  return x <= 0x10 ? x : 0x1f - x;
+  switch (ramp) {
+    case 0: // produce a triangular pattern
+      x &= 0x1f;
+      return x <= 0x10 ? x : 0x1f - x;
+    case 1: // produce a downward ramp pattern
+      x &= 0x0f;
+      return 0x0f - x;
+  }
 }
 
 void Ui::UpdateLEDs() {
@@ -314,15 +320,15 @@ void Ui::UpdateLEDs() {
       uint8_t pwm = system_clock.milliseconds() & 0xf;
       uint8_t fade_patterns[4] = {
         0xf,  // NONE
-        FadePattern(4, 0),  // START
-        FadePattern(4, 0x0f),  // END
-        FadePattern(4, 0x08),  // SELF
+        FadePattern(4, 0, 0),  // START
+        FadePattern(4, 0x0f, 0),  // END = 15
+        FadePattern(4, 0x08, 0),  // SELF = 8
       };
 
       uint8_t lfo_patterns[3] = {
-        FadePattern(4, 0x08), // Default, middle
-        FadePattern(6, 0x08), // slow
-        FadePattern(2, 0x08), // fast
+        FadePattern(4, 0x08, 0), // Default, middle
+        FadePattern(6, 0x08, 0), // slow
+        FadePattern(2, 0x08, 0), // fast
       };
 
       for (size_t i = 0; i < kNumChannels; ++i) {
@@ -334,10 +340,17 @@ void Ui::UpdateLEDs() {
         }
         uint8_t type = configuration & 0x3;
         LedColor color = palette_[type];
+        uint16_t* seg_config = settings_->mutable_state()->segment_configuration;
         if (settings_->in_seg_gen_mode()) {
-          brightness = chain_state_->loop_status(i) == ChainState::LOOP_STATUS_SELF ?
-            lfo_patterns[configuration >> 8 & 0x3] : fade_patterns[chain_state_->loop_status(i)];
-
+          if (chain_state_->loop_status(i) == ChainState::LOOP_STATUS_SELF) {
+            brightness = lfo_patterns[configuration >> 8 & 0x3]; // triangular brightness pattern
+          } else if ((seg_config[i] & 0x3) == 0 && (seg_config[i] & 0x0300) == 0x0200) {
+            brightness = FadePattern(8, 0x08, 1); // slow ramp brightness pattern
+          } else if ((seg_config[i] & 0x3) == 0 && (seg_config[i] & 0x0300) == 0x0100) {
+            brightness = FadePattern(5, 0x08, 1); // fast ramp brightness pattern
+          } else {
+            brightness = fade_patterns[0];
+          }
           if ((changing_slider_prop_ & (1 << i)) && (type == 1 || type == 2)) {
             uint8_t scale = 3 - ((configuration >> 12) & 0x3);
             color = (system_clock.milliseconds() >> 6) % 2 == 0 ?
@@ -354,7 +367,7 @@ void Ui::UpdateLEDs() {
         }
         if (settings_->state().color_blind == 1) {
           if (type == 0) {
-            uint8_t modulation = FadePattern(6, 13 - (2 * i)) >> 1;
+            uint8_t modulation = FadePattern(6, 13 - (2 * i), 0) >> 1;
             brightness = brightness * (7 + modulation) >> 4;
           } else if (type == 1) {
             brightness = brightness >= 0x8 ? 0xf : 0;

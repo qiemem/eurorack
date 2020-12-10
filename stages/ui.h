@@ -82,7 +82,7 @@ class Ui {
   void MultiModeToggle(const uint8_t i);
 
   void UpdateLEDs();
-  uint8_t FadePattern(uint8_t shift, uint8_t phase) const;
+  uint8_t FadePattern(uint8_t shift, uint8_t phase, bool ramp) const;
 
   void show_mode() {
     for (size_t i = 0; i < kNumChannels; ++i) {
