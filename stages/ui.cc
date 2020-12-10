@@ -321,8 +321,8 @@ void Ui::UpdateLEDs() {
       uint8_t fade_patterns[4] = {
         0xf,  // NONE
         FadePattern(4, 0, 0),  // START
-        FadePattern(4, 0x0f, 0),  // END = 15
-        FadePattern(4, 0x08, 0),  // SELF = 8
+        FadePattern(4, 0x0f, 0),  // END
+        FadePattern(4, 0x08, 0),  // SELF
       };
 
       uint8_t lfo_patterns[3] = {
