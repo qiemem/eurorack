@@ -264,13 +264,12 @@ void Ui::MultiModeToggle(const uint8_t i) {
 inline uint8_t Ui::FadePattern(uint8_t shift, uint8_t phase, bool ramp) const {
   uint8_t x = system_clock.milliseconds() >> shift;
   x += phase;
-  switch (ramp) {
-    case 0: // produce a triangular pattern
-      x &= 0x1f;
-      return x <= 0x10 ? x : 0x1f - x;
-    case 1: // produce a downward ramp pattern
-      x &= 0x0f;
-      return 0x0f - x;
+  if (ramp) { // produce a downward ramp pattern with a delay
+    x &= 0x1f;
+    return x > 0x0f ? 0x0f : 0x0f - x;
+  } else { // produce a triangular pattern
+    x &= 0x1f;
+    return x <= 0x10 ? x : 0x1f - x;
   }
 }
 
@@ -320,15 +319,20 @@ void Ui::UpdateLEDs() {
       uint8_t pwm = system_clock.milliseconds() & 0xf;
       uint8_t fade_patterns[4] = {
         0xf,  // NONE
-        FadePattern(4, 0, 0),  // START
-        FadePattern(4, 0x0f, 0),  // END
-        FadePattern(4, 0x08, 0),  // SELF
+        FadePattern(4, 0, false),  // START
+        FadePattern(4, 0x0f, false),  // END
+        FadePattern(4, 0x08, false),  // SELF
       };
 
       uint8_t lfo_patterns[3] = {
-        FadePattern(4, 0x08, 0), // Default, middle
-        FadePattern(6, 0x08, 0), // slow
-        FadePattern(2, 0x08, 0), // fast
+        FadePattern(4, 0x08, false), // Default, middle
+        FadePattern(6, 0x08, false), // slow
+        FadePattern(2, 0x08, false), // fast
+      };
+
+      uint8_t ramp_patterns[2] = {
+        FadePattern(7, 0x08, true), // slow ramp
+        FadePattern(6, 0x08, true), // faster ramp
       };
 
       for (size_t i = 0; i < kNumChannels; ++i) {
@@ -340,16 +344,20 @@ void Ui::UpdateLEDs() {
         }
         uint8_t type = configuration & 0x3;
         LedColor color = palette_[type];
-        uint16_t* seg_config = settings_->mutable_state()->segment_configuration;
         if (settings_->in_seg_gen_mode()) {
           if (chain_state_->loop_status(i) == ChainState::LOOP_STATUS_SELF) {
-            brightness = lfo_patterns[configuration >> 8 & 0x3]; // triangular brightness pattern
-          } else if ((seg_config[i] & 0x3) == 0 && (seg_config[i] & 0x0300) == 0x0200) {
-            brightness = FadePattern(8, 0x08, 1); // slow ramp brightness pattern
-          } else if ((seg_config[i] & 0x3) == 0 && (seg_config[i] & 0x0300) == 0x0100) {
-            brightness = FadePattern(5, 0x08, 1); // fast ramp brightness pattern
+            brightness = lfo_patterns[configuration >> 8 & 0x3];
+          } else if (type != 0) {
+            brightness = fade_patterns[chain_state_->loop_status(i)];
+          } else if ((configuration & 0x0300) == 0x0200) {
+            brightness = chain_state_->loop_status(i) == ChainState::LOOP_STATUS_NONE ?
+              ramp_patterns[0] : fade_patterns[chain_state_->loop_status(i)] * 0.15f;
+          } else if ((configuration & 0x0300) == 0x0100) {
+            brightness = chain_state_->loop_status(i) == ChainState::LOOP_STATUS_NONE ?
+              ramp_patterns[1] : fade_patterns[chain_state_->loop_status(i)];
           } else {
-            brightness = fade_patterns[0];
+            brightness = chain_state_->loop_status(i) == ChainState::LOOP_STATUS_NONE ?
+              fade_patterns[0] : fade_patterns[chain_state_->loop_status(i)] * 0.4f;
           }
           if ((changing_slider_prop_ & (1 << i)) && (type == 1 || type == 2)) {
             uint8_t scale = 3 - ((configuration >> 12) & 0x3);
