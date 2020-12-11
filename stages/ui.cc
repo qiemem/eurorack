@@ -375,7 +375,7 @@ void Ui::UpdateLEDs() {
         }
         if (settings_->state().color_blind == 1) {
           if (type == 0) {
-            uint8_t modulation = FadePattern(6, 13 - (2 * i), 0) >> 1;
+            uint8_t modulation = FadePattern(6, 13 - (2 * i), false) >> 1;
             brightness = brightness * (7 + modulation) >> 4;
           } else if (type == 1) {
             brightness = brightness >= 0x8 ? 0xf : 0;
