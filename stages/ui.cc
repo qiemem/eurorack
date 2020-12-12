@@ -332,7 +332,7 @@ void Ui::UpdateLEDs() {
 
       uint8_t ramp_patterns[3] = {
         0xf,  // none
-        FadePattern(6, 0x08, true), // fast ramp
+        FadePattern(5, 0x08, true), // fast ramp
         FadePattern(7, 0x08, true), // slow ramp
       };
 
