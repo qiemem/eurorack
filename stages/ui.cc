@@ -330,9 +330,10 @@ void Ui::UpdateLEDs() {
         FadePattern(2, 0x08, false), // fast
       };
 
-      uint8_t ramp_patterns[2] = {
+      uint8_t ramp_patterns[3] = {
+        0xf,  // none
+        FadePattern(6, 0x08, true), // fast ramp
         FadePattern(7, 0x08, true), // slow ramp
-        FadePattern(6, 0x08, true), // faster ramp
       };
 
       for (size_t i = 0; i < kNumChannels; ++i) {
@@ -347,17 +348,11 @@ void Ui::UpdateLEDs() {
         if (settings_->in_seg_gen_mode()) {
           if (chain_state_->loop_status(i) == ChainState::LOOP_STATUS_SELF) {
             brightness = lfo_patterns[configuration >> 8 & 0x3];
-          } else if (type != 0) {
-            brightness = fade_patterns[chain_state_->loop_status(i)];
-          } else if ((configuration & 0x0300) == 0x0200) {
-            brightness = chain_state_->loop_status(i) == ChainState::LOOP_STATUS_NONE ?
-              ramp_patterns[0] : fade_patterns[chain_state_->loop_status(i)] * 0.15f;
-          } else if ((configuration & 0x0300) == 0x0100) {
-            brightness = chain_state_->loop_status(i) == ChainState::LOOP_STATUS_NONE ?
-              ramp_patterns[1] : fade_patterns[chain_state_->loop_status(i)];
           } else {
-            brightness = chain_state_->loop_status(i) == ChainState::LOOP_STATUS_NONE ?
-              fade_patterns[0] : fade_patterns[chain_state_->loop_status(i)] * 0.4f;
+            brightness = fade_patterns[chain_state_->loop_status(i)];
+            if (type == 0) {
+              brightness = brightness * (ramp_patterns[configuration >> 8 & 0x3] + 1) >> 5;
+            }
           }
           if ((changing_slider_prop_ & (1 << i)) && (type == 1 || type == 2)) {
             uint8_t scale = 3 - ((configuration >> 12) & 0x3);
