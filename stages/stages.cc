@@ -207,6 +207,20 @@ void ProcessSixEg(IOBuffer::Block* block, size_t size) {
 
 }
 
+const int kNumOuroborosRatiosHigh = 17;
+float ouroboros_ratios_high[] = {
+  1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f,
+  10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 16.0f
+};
+
+const int kNumOuroborosRatiosLow = 17;
+float ouroboros_ratios_low[] = {
+  (1.0f / 16.0f), (1.0f / 15.0f), (1.0f / 14.0f), (1.0f / 13.0f),
+  (1.0f / 12.0f), (1.0f / 11.0f), (1.0f / 10.0f), (1.0f / 9.0f),
+  (1.0f / 8.0f), (1.0f / 7.0f), (1.0f / 6.0f), (1.0f / 5.0f),
+  (1.0f / 4.0f), (1.0f / 3.0f), (1.0f / 2.0f), 1.0f, 1.0f
+};
+
 const int kNumOuroborosRatios = 11;
 float ouroboros_ratios[] = {
   0.25f, 0.5f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 8.0f, 8.0f
@@ -220,7 +234,8 @@ float previous_amplitude[kNumChannels];
 void ProcessOuroboros(IOBuffer::Block* block, size_t size) {
   const float coarse = (block->cv_slider[0] - 0.5f) * 96.0f;
   const float fine = block->pot[0] * 2.0f - 1.0f;
-  const uint8_t range = (settings.state().segment_configuration[0] >> 10) & 0x3;
+  const uint16_t* config= settings.state().segment_configuration;
+  const uint8_t range = (config[0] >> 10) & 0x3;
   const float range_mult =
     (range == 0x01) ? 1.0f / 128.0f :
     (range == 0x02) ? 1.0f / (128.0f * 16.0f) :
@@ -236,19 +251,36 @@ void ProcessOuroboros(IOBuffer::Block* block, size_t size) {
 
   for (int channel = kNumChannels - 1; channel >= 0; --channel) {
 
-    const float harmonic = blockHarmonic[channel] * 9.999f;
+    float* ratios = ouroboros_ratios;
+    int num_ratios = kNumOuroborosRatios;
+
+    // TODO: This is too costly performance wise.  Could try switching to and
+    // array that stores the ratios for each channel, which is set in ui.cc
+    if (channel > 0) {
+      const uint8_t r = (config[channel] >> 10) & 0x3;
+      if (r == 0) {
+        ratios = ouroboros_ratios_high;
+        num_ratios = kNumOuroborosRatiosHigh;
+      } else if (r == 2) {
+        ratios = ouroboros_ratios_low;
+        num_ratios = kNumOuroborosRatiosLow;
+      }
+    }
+    const float harmonic = blockHarmonic[channel] * (num_ratios - 1.001f);
     MAKE_INTEGRAL_FRACTIONAL(harmonic);
     harmonic_fractional = 8.0f * (harmonic_fractional - 0.5f) + 0.5f;
     CONSTRAIN(harmonic_fractional, 0.0f, 1.0f);
     // harmonic_integral can go out of bounds with CV if harmonics set to cv_slider.
-    CONSTRAIN(harmonic_integral, 0, kNumOuroborosRatios - 2);
+    CONSTRAIN(harmonic_integral, 0, num_ratios - 2);
     const float ratio = channel == 0 ? 1.0f : Crossfade(
-        ouroboros_ratios[harmonic_integral],
-        ouroboros_ratios[harmonic_integral + 1],
+        ratios[harmonic_integral],
+        ratios[harmonic_integral + 1],
         harmonic_fractional);
+
     const float amplitude = channel == 0
         ? 1.0f
         : std::max(blockAmplitude[channel] - 0.01f, 0.0f);
+
     bool trigger = false;
     for (size_t i = 0; i < size; ++i) {
       trigger = trigger || (block->input[channel][i] & GATE_FLAG_RISING);
