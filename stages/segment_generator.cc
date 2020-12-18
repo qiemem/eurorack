@@ -293,7 +293,7 @@ void SegmentGenerator::ProcessRiseAndFall(
   ParameterInterpolator primary(&primary_, local_parameters_[0].cv, size);
 
   while (size--) {
-    value_ = primary.Next();
+    value_ = segments_[0].bipolar ? primary.Next() : fabsf(primary.Next());
     if (value_ > lp_) {
       ONE_POLE(lp_, value_, rise);
       phase_ = 0;
