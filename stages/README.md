@@ -33,6 +33,10 @@ This fork includes the changes in official firmware 1.1 as well as [the extended
 
 This firmware should fully support [chained modules](https://mutable-instruments.net/modules/stages/manual/#chaining-modules)! See [multi-mode usage](#multi-mode-usage).
 
+Check out this great video overview of the fork as well as of the extended sequencer by Peakae (does not include v1.1.0 updates):
+
+[![](https://img.youtube.com/vi/_-rgoM_oNE0/0.jpg)](https://www.youtube.com/watch?v=_-rgoM_oNE0)Check out this great video overview by Peakae (does not include v1.1.0 updates):
+
 Download and installation
 -------------------------
 
