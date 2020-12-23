@@ -342,6 +342,22 @@ void SegmentGenerator::ProcessGateGenerator(
     const GateFlags* gate_flags, SegmentGenerator::Output* out, size_t size) {
   ParameterInterpolator primary(&primary_, parameters_[0].primary, size);
   while (size--) {
+    active_segment_ = *gate_flags & GATE_FLAG_HIGH ? 0 : 1;
+
+    const float p = primary.Next();
+    lp_ = value_ = active_segment_ == 0 ? p : 0.0f;
+    out->value = lp_;
+    out->phase = 0.5f;
+    out->segment = active_segment_;
+    ++gate_flags;
+    ++out;
+  }
+}
+
+void SegmentGenerator::ProcessProbabilisticGateGenerator(
+    const GateFlags* gate_flags, SegmentGenerator::Output* out, size_t size) {
+  ParameterInterpolator primary(&primary_, parameters_[0].primary, size);
+  while (size--) {
     if (*gate_flags & GATE_FLAG_RISING) {
       active_segment_ = Random::GetFloat() < parameters_[0].secondary ? 0 : 1;
     }
@@ -1314,7 +1330,7 @@ SegmentGenerator::ProcessFn SegmentGenerator::advanced_process_fn_table_[16] = {
   &SegmentGenerator::ProcessDelay,
   // &SegmentGenerator::ProcessClockedSampleAndHold,
   &SegmentGenerator::ProcessTimedPulseGenerator,
-  &SegmentGenerator::ProcessGateGenerator,
+  &SegmentGenerator::ProcessProbabilisticGateGenerator,
 
   // TURING
   &SegmentGenerator::ProcessRandom,
