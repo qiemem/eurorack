@@ -761,16 +761,18 @@ void SegmentGenerator::ProcessDoubleScrollAttractor(
 
   active_segment_ = 0;
   // 1.4 gives a similar feel to the LFO speeds here
-  float frequency = SemitonesToRatio(f) * 1.4f * 2.0439497f / kSampleRate;
+  float frequency = SemitonesToRatio(f) * 1.3f * 2.0439497f / kSampleRate;
   switch (segments_[active_segment_].range) {
     case segment::RANGE_SLOW:
-      frequency /= 16.0f;
+      // Range from ~8s to ~30min
+      frequency /= (16.0f * 16.0f);
       break;
     case segment::RANGE_FAST:
-      frequency *= 8.0f; // Otherwise can't handle full slider range
+      // ~32hz to ~8s.
       break;
     default:
-      // It's good where it is
+      // ~2s to ~120s.
+      frequency /= 16.0f;
       break;
   }
   // Could increase to 0.075 if we used runge-kutta
