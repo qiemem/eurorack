@@ -357,9 +357,10 @@ void SegmentGenerator::ProcessGateGenerator(
 void SegmentGenerator::ProcessProbabilisticGateGenerator(
     const GateFlags* gate_flags, SegmentGenerator::Output* out, size_t size) {
   ParameterInterpolator primary(&primary_, parameters_[0].primary, size);
+  const float prob = 1.02 * parameters_[0].secondary - 0.01;
   while (size--) {
     if (*gate_flags & GATE_FLAG_RISING) {
-      active_segment_ = Random::GetFloat() < parameters_[0].secondary ? 0 : 1;
+      active_segment_ = Random::GetFloat() < prob ? 0 : 1;
     }
     active_segment_ = (*gate_flags & GATE_FLAG_HIGH) && (active_segment_ == 0) ? 0 : 1;
 
