@@ -193,8 +193,7 @@ This segment type comes after hold (red) segments in the cycle of segments and i
 When used as a single segment, random segments behave as follows:
 
 - Ungated, non-looping: A uniform random CV generator. Just your basic random output, with controllable frequency.
-    - Slider/CV: Frequency in V/oct.
-    - Button + slider: Frequency range, same as LFOs. Bottom/slow is 2 min to 2 hz. Middle/default is ~8 secs to ~32hz. Top/fast is ~8hz to ~2khz.
+    - Slider/CV: Frequency in V/oct. Frequency range is ~8 secs to ~32hz.
     - Pot: Portamento
     - Button + pot: Polarity. Unipolar ranges between 0v and 8v. Bipolar between -5v and 5v.
 - Ungated, looping: A smoothly chaotic system, Chen's [double-scroll attractor](https://en.wikipedia.org/wiki/Multiscroll_attractor), a variant of Chua's attractor, with `a=42`, `b` between 1 and 6, and `c=28`.
