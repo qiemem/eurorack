@@ -627,8 +627,10 @@ void ChainState::HandleRequest(Settings* settings) {
       }
       s->segment_configuration[i] &= ~0b00000100; // Reset loop bits
       s->segment_configuration[i] |= new_loop_bit; // Set new loop bit
-      if (new_loop_bit != loop_bit && request_.argument[0] == request_.argument[3]) {
-        s->segment_configuration[i] &= ~0xff00; // Reset LFO range
+      if (new_loop_bit != loop_bit) {
+        if (request_.argument[1] == request_.argument[2]) {
+          s->segment_configuration[i] &= ~0xff00; // Reset LFO range
+        }
         dirty = true;
       }
     }
