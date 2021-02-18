@@ -25,4 +25,4 @@ License
 Code (AVR projects): GPL3.0.
 Code (STM32F projects): MIT license.
 Hardware: cc-by-sa-3.0
-By: Olivier Gillet (olivier@mutable-instruments.net)
+By: Emilie Gillet (emilie.o.gillet@gmail.com)
