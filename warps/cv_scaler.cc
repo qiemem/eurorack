@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -54,7 +54,8 @@ void CvScaler::Init(CalibrationData* calibration_data) {
   for (int32_t i = 0; i < 4; ++i) {
     normalization_detector_[i].Init(0.01f, 0.5f);
   }
-  
+  normalization_detector_[1].Init(0.01f, 0.3f);
+
   normalization_probe_enabled_ = true;
 }
 
@@ -110,7 +111,7 @@ void CvScaler::DetectAudioNormalization(Codec::Frame* in, size_t size) {
     }
     float y = static_cast<float>(count) / static_cast<float>(size >> 4);
     float x = normalization_probe_value_[0] ? -1.0f : 1.0f;
-    
+
     normalization_detector_[channel + 2].Process(x, y);
     if (normalization_detector_[channel + 2].normalized()) {
       for (size_t i = 0; i < size; ++i) {
@@ -126,18 +127,21 @@ void CvScaler::Read(Parameters* p) {
   BIND(p->channel_drive[1], LEVEL_2, false, 1.6f, 0.5f, true);
   BIND(p->modulation_algorithm, ALGORITHM, true, 2.0f, 0.08f, false);
   BIND(p->modulation_parameter, PARAMETER, false, 2.0f, 0.08f, false);
-  
+
+  const float folder = 0.125;
+  const float cross_buff = 0.015;
+  const float slope = (folder + cross_buff) / folder;
   // Prevent wavefolder bleed caused by a slight offset in the pot or ADC.
   if (p->modulation_algorithm <= 0.125f) {
-    p->modulation_algorithm = p->modulation_algorithm * 1.08f - 0.01f;
+    p->modulation_algorithm = p->modulation_algorithm * slope - cross_buff;
     CONSTRAIN(p->modulation_algorithm, 0.0f, 1.0f);
   }
-  
+
   // Raw parameter mappings (no scaling).
   p->raw_algorithm_pot = UnwrapPot(lp_state_[ADC_ALGORITHM_POT]);
   float raw_algorithm_cv = -lp_state_[ADC_ALGORITHM_CV];
   raw_algorithm_cv += calibration_data_->offset[ADC_ALGORITHM_CV];
-  
+
   p->raw_algorithm_cv = raw_algorithm_cv * 2.0f;
   CONSTRAIN(p->raw_algorithm_cv, -1.0f, 1.0f);
 
@@ -167,13 +171,13 @@ void CvScaler::Read(Parameters* p) {
   } else {
     note_cv_ += 0.1f * interval;
   }
-  
+
   note = 60.0f * adc_.float_value(ADC_LEVEL_1_POT) + 12.0f;
   note_pot_ += 0.1f * (note - note_pot_);
   p->note = note_pot_ + note_cv_;
-  
+
   DetectNormalization();
-  
+
   for (int32_t i = 0; i < 2; ++i) {
     if (normalization_detector_[i].normalized()) {
       float pot = lp_state_[ADC_LEVEL_1_POT + i];
@@ -184,7 +188,7 @@ void CvScaler::Read(Parameters* p) {
   if (normalization_detector_[0].normalized()) {
     p->note = note_pot_ + 24.0f;
   }
-  
+
   adc_.Convert();
 }
 
