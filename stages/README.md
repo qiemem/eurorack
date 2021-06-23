@@ -150,7 +150,7 @@ This fork adds the following features to this mode, none of which interfere with
     - Note: Unlike with LFOs, CV range is unchanged.
     - Range is indicated by a solid green light followed by a ramp down to black. Default is solid green.
 - **Quantizing step and hold segments**. Hold button and move slider on step (yellow) and hold (red) segments to control quantization. The LED will flash and change color to indicate scale.
-    - Scale, from bottom to top: unquantized (LED off), chromatic (red), major (yellow), pentatonic (red)
+    - Scale, from bottom to top: unquantized (LED off), chromatic (red), major (yellow), pentatonic (green)
     - When quantized, the slider has an effective range of 0v-2v and is added *before* quantization, and thus transposes in key. It can thus be used as a quantized sequencer or to select [mode](https://en.wikipedia.org/wiki/Mode_\(music\)#Modern_modes)
 	- Thus, minor (aeolian) is the 6th step in major
 	- Minor pentatonic is the 4th step in pentatonic
