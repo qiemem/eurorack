@@ -134,7 +134,9 @@ inline float SegmentGenerator::WarpPhase(float t, float curve) const {
   if (flip) {
     t = 1.0f - t;
   }
-  const float a = 128.0f * curve * curve;
+  const float a = settings_->state().multimode != MULTI_MODE_STAGES_ADVANCED ? 128.0f * curve * curve
+    // In advanced segment generator mode, allow hyperexponential curves in the last quarter of the pot's turn
+    : 128.0f * curve * curve * max(1.0f, 10.0f * curve);
   t = (1.0f + a) * t / (1.0f + a * t);
   if (flip) {
     t = 1.0f - t;
