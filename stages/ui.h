@@ -43,6 +43,7 @@ const int32_t kLongPressDurationForMultiModeToggle = 5000;
 const int32_t kDiscreteStateBrightDur = 4000;
 const int32_t kDiscreteStateBlinkDur = 120;
 const uint32_t kDiscreteStatePreBlinkDur = 30;
+const int32_t kSaveBlinkMs = 120;
 
 namespace stages {
 
@@ -116,6 +117,8 @@ class Ui {
   uint8_t tracking_multimode_;
 
   uint32_t discrete_change_time_[kNumChannels];
+
+  int32_t save_blink_counter_ = 0;
 
   Settings* settings_;
   ChainState* chain_state_;

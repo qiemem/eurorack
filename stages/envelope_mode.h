@@ -59,11 +59,6 @@ class EnvelopeMode {
   Settings* settings_;
   Ui* ui_;
 
-  // Keep track of whether latest values have yet to be saved.
-  // -1 means data is not dirty.
-  // a positive time (>=0) means data is dirty and is the number of ticks since it first became dirty.
-  int save_timer_;
-  
   // The index of the currently selected envelope
   size_t active_envelope_;
 

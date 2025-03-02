@@ -37,6 +37,8 @@
 
 namespace stages {
 
+const int kSaveDebounceMs = 5000;
+
 struct ChannelCalibrationData {
   float adc_offset;
   float adc_scale;
@@ -117,7 +119,11 @@ class Settings {
   bool Init();
 
   void SavePersistentData();
-  void SaveState();
+  // Schedules a state save after kSaveDebounceMs.
+  void SaveStateWithDebounce();
+  // Saves state if sufficient time has passed since the last change.
+  // Should be called exactly once per sys tick in the sys tick interrupt.
+  bool PollSave();
 
   inline ChannelCalibrationData* mutable_calibration_data(int channel) {
     return &persistent_data_.channel_calibration_data[channel];
@@ -154,6 +160,7 @@ class Settings {
  private:
   PersistentData persistent_data_;
   State state_;
+  int save_counter_ = 0;
 
   stmlib::ChunkStorage<
       0x08004000,

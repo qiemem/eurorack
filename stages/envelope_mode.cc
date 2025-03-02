@@ -53,9 +53,6 @@ namespace stages {
     // the channel is switched - see below). 
     active_channel_switch_time_ = 0;
 
-    // Disable save timer
-    save_timer_ = -1;
-
     // The index of the currently selected envelope. 
     active_envelope_ = 0;
 
@@ -175,7 +172,7 @@ namespace stages {
     }
     // Start/Reset the save timer if state was modified
     if (did_modify_state) {
-      save_timer_ = 0;
+      settings_->SaveStateWithDebounce();
     }
 
     // Process each channel
@@ -229,13 +226,6 @@ namespace stages {
       float value = envelope.Value();
       for (size_t i = 0; i < size; i++) {
         block->output[ch][i] = settings_->dac_code(ch, value);
-      }
-    }
-
-    if (save_timer_ >= 0) {
-      if (++save_timer_ >= kSaveTimeWait) {
-        save_timer_ = -1;
-        settings_->SaveState();
       }
     }
   }

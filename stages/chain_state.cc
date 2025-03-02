@@ -661,7 +661,7 @@ void ChainState::HandleRequest(Settings* settings) {
   }
 
   if (dirty) {
-    settings->SaveState();
+    settings->SaveStateWithDebounce();
   }
 }
 

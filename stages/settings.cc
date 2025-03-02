@@ -90,8 +90,19 @@ void Settings::SavePersistentData() {
   chunk_storage_.SavePersistentData();
 }
 
-void Settings::SaveState() {
-  chunk_storage_.SaveState();
+void Settings::SaveStateWithDebounce() {
+  save_counter_ = kSaveDebounceMs;
+}
+
+bool Settings::PollSave() {
+  if (save_counter_ > 0) {
+    save_counter_--;
+    if (save_counter_ == 0) {
+      chunk_storage_.SaveState();
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace stages

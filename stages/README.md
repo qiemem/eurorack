@@ -401,6 +401,14 @@ This way it is possible to modulate (and therefore sequence) the harmonics with 
 
 The frequency range in this mode can be controlled just as with the normal harmonic oscillator mode (hold leftmost button and move leftmost slider).
 
+Other changes
+-------------
+
+The original firmware would save state when a button was released.
+This firmware saves state 5 seconds after a state change occurs, reseting the the timer if another change occurs within that time.
+Because this firmware uses significantly more flash storage to save state, this change reduces the strain on flash in order to extend the life of the chip.
+All LEDs momentarily blink off when a save occurs.
+
 Known issues
 ------------
 

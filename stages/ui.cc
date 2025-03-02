@@ -82,7 +82,7 @@ void Ui::Init(Settings* settings, ChainState* chain_state, CvReader* cv_reader, 
     } else {
       state->color_blind = 1;
     }
-    settings_->SaveState();
+    settings_->SaveStateWithDebounce();
   }
 
   fill(&slider_led_counter_[0], &slider_led_counter_[kNumLEDs], 0);
@@ -127,7 +127,7 @@ void Ui::Poll() {
         uint16_t old_flags = seg_config[i];
 
         if (changing_slider_prop_ >> i & 1 // in the middle of change, so keep changing
-            || fabs(slider - locked_slider) > 0.05f) {
+            || fabsf(slider - locked_slider) > 0.05f) {
 
           changing_slider_prop_ |= 1 << i;
 
@@ -261,7 +261,7 @@ void Ui::Poll() {
   }
   if (!pressed && dirty_) {
     dirty_ = false;
-    settings_->SaveState();
+    settings_->SaveStateWithDebounce();
   }
 
   if (settings_->in_ouroboros_mode()) {
@@ -278,13 +278,13 @@ void Ui::Poll() {
         if (press_time_[i] > kLongPressDuration) { // Long-press
           if (press_time_[i] < kLongPressDurationForMultiModeToggle) { // But not long enough for multi-mode toggle
             s->segment_configuration[i] ^= 0b01000000; // Toggle waveshape MSB
-            settings_->SaveState();
+            settings_->SaveStateWithDebounce();
           }
         } else if (press_time_[i] > 0) {
           uint8_t type_bits = (s->segment_configuration[i] & 0b00110000) >> 4; // Get current waveshape LSB number
           s->segment_configuration[i] &= ~0b00110000; // Reset waveshape LSB bits
           s->segment_configuration[i] |= (((type_bits + 1) % 3) << 4); // Cycle through 0,1,2 and set LSB bits
-          settings_->SaveState();
+          settings_->SaveStateWithDebounce();
         }
         press_time_[i] = 0;
       }
@@ -310,6 +310,9 @@ void Ui::Poll() {
       }
     }
   }
+  if (settings_->PollSave()) {
+    save_blink_counter_ = kSaveBlinkMs;
+  }
 }
 
 void Ui::MultiModeToggle(const uint8_t i) {
@@ -322,7 +325,7 @@ void Ui::MultiModeToggle(const uint8_t i) {
     }
     chain_state_->SuspendSwitches(); // Don't consider chain button presses while changing mode
     state->multimode = (uint8_t) multimodes_[i];
-    settings_->SaveState();
+    settings_->SaveStateWithDebounce();
     chain_state_->start_reinit();
     eg_mode_->ReInit();
   }
@@ -350,7 +353,9 @@ void Ui::UpdateLEDs() {
   ChainState::ChainStateStatus status = chain_state_->status();
   const uint32_t ms = system_clock.milliseconds();
 
-  if (mode_ == UI_MODE_FACTORY_TEST) {
+  if (save_blink_counter_ > 0 ) {
+    save_blink_counter_--; // LEDs already cleared, so don't need to do anything
+  } else if (mode_ == UI_MODE_FACTORY_TEST) {
 
     size_t counter = (ms >> 8) % 3;
     for (size_t i = 0; i < kNumChannels; ++i) {
