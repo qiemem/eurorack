@@ -54,6 +54,14 @@ class EnvelopeMode {
 
   void ProcessEnvelopes(IOBuffer::Block* block, size_t size);
 
+  inline size_t get_active_envelope() {
+    return active_envelope_;
+  }
+
+  inline bool is_slider_enabled(size_t ch) {
+    return slider_enabled_[ch];
+  }
+
  private:
   EnvelopeManager envelope_manager_;
   Settings* settings_;

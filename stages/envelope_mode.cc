@@ -185,9 +185,6 @@ namespace stages {
         slider_enabled_[ch] = true;
       }
 
-      // Set Slider LED to indicate whether slider is active for curent envelope.
-      ui_->set_slider_led(ch, slider_enabled_[ch], 1);
-
       // Check for gates. If the input is not patched, the previous channel's
       // gate status will be used.
       if (block->input_patched[ch]) {
@@ -218,7 +215,7 @@ namespace stages {
           ui_->set_led(ch, LED_COLOR_RED);
           break;
         default:
-          ui_->set_led(ch, ch == active_envelope_ ? LED_COLOR_YELLOW : LED_COLOR_OFF);
+          ui_->set_led(ch, LED_COLOR_OFF);
           break;
       }
 

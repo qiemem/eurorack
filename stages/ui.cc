@@ -472,14 +472,35 @@ void Ui::UpdateLEDs() {
             slider_led_counter_[i] ? LED_COLOR_GREEN : LED_COLOR_OFF);
       }
 
-    } else if (multimode == MULTI_MODE_SIX_IDENTICAL_EGS ||
-               multimode == MULTI_MODE_SIX_INDEPENDENT_EGS) {
-      // LEDs update for 6EG and 6IEG modes
+    } else if (multimode == MULTI_MODE_SIX_IDENTICAL_EGS) {
       for (size_t i = 0; i < kNumChannels; ++i) {
         leds_.set(LED_GROUP_UI + i, led_color_[i]);
         leds_.set(LED_GROUP_SLIDER + i, slider_led_counter_[i] ? LED_COLOR_GREEN : LED_COLOR_OFF);
       }
 
+    } else if (multimode == MULTI_MODE_SIX_INDEPENDENT_EGS) {
+      size_t active_envelope = eg_mode_->get_active_envelope();
+      for (size_t ch = 0; ch < kNumChannels; ++ch) {
+        // determine slider led color
+        // slider led behavior indicates active channel as well as whether or
+        // not the channel is activated.
+        uint32_t slider_color = LED_COLOR_OFF;
+        bool slider_enabled = eg_mode_->is_slider_enabled(ch);
+        if (ch == active_envelope) {
+          // The active envelope blinks.
+          // led should stay on for a higher percentage and blink faster when
+          // enabled versus when disabled.
+          uint8_t cutoff = slider_enabled ? 3 : 8;
+          uint8_t shift = slider_enabled ? 4 : 6;
+          slider_color = FadePattern(shift, 0x08) >= cutoff ? LED_COLOR_GREEN : LED_COLOR_OFF;
+        } else {
+          // The inactive envelopes are solid.
+          slider_color = slider_enabled ? LED_COLOR_GREEN : LED_COLOR_OFF;
+        }
+
+        leds_.set(LED_GROUP_UI + ch, led_color_[ch]);
+        leds_.set(LED_GROUP_SLIDER + ch, slider_color);
+      }
     } else {
 
       // Invalid mode, turn all off
