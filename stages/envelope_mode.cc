@@ -223,8 +223,8 @@ namespace stages {
       }
 
       // Compute output values for each envelope
-      float value = envelope.Value();
       for (size_t i = 0; i < size; i++) {
+        float value = envelope.Value();
         block->output[ch][i] = settings_->dac_code(ch, value);
       }
     }

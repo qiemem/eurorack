@@ -220,7 +220,7 @@ void ProcessOuroboros(IOBuffer::Block* block, size_t size) {
         harmonic_fractional);
     ONE_POLE(
         channel_amplitude[channel],
-        channel == 0 ? 1.0f : std::max(blockAmplitude[channel] - 0.01f, 0.0f),
+        channel == 0 ? 1.0f : fmaxf(blockAmplitude[channel] - 0.01f, 0.0f),
         0.2f);
     const float amplitude = channel_amplitude[channel];
 

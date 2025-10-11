@@ -1,12 +1,14 @@
 
 #include "stages/envelope.h"
+#include "stages/segment_generator.h"
 
 #include <algorithm>
 
-const float kMinStageLength = 0.001f;
-const float timeScale = 4000.0f * 10; // 4000 is 1 second
-
 namespace stages {
+
+const float kMinStageLength = 0.001f;
+const float timeScale = kSampleRate * 10;
+
   
   void Envelope::Init() {
     
