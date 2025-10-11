@@ -1,13 +1,13 @@
 
 #include "stages/envelope.h"
 #include "stages/segment_generator.h"
+#include "stages/envelope_utils.h"
 
 #include <algorithm>
 
 namespace stages {
 
 const float kMinStageLength = 0.001f;
-const float timeScale = kSampleRate * 10;
 
   
   void Envelope::Init() {
@@ -127,8 +127,7 @@ const float timeScale = kSampleRate * 10;
     // If factor is above threshold, set the length in time units, according to time scale.
     // Use a curve so smaller values can be dialed in more precisely, despite big time scales.
     if (f >= kMinStageLength) {
-      float ff = WarpPhase(f - kMinStageLength, 0.25f);
-      *field = std::max(0L, (long)(ff * timeScale));
+      *field = 1.0f / RateToFrequency(f);
     } else {
       *field = 0L;
     }
@@ -157,18 +156,5 @@ const float timeScale = kSampleRate * 10;
     return from + (to - from) * t;
     
   }
-  
-  float Envelope::WarpPhase(float t, float curve) {
-    
-    // Curve generator for interpolation, copied from SegmentGenerator::WarpPhase
-    curve -= 0.5f;
-    const bool flip = curve < 0.0f;
-    if (flip) t = 1.0f - t;
-    const float a = 128.0f * curve * curve;
-    t = (1.0f + a) * t / (1.0f + a * t);
-    if (flip) t = 1.0f - t;
-    return t;
-    
-  }
-  
 }
+

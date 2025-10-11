@@ -72,8 +72,6 @@ class Envelope {
     bool HasStageLength(long *field);
     
     float Interpolate(float from, float to, long time, long length, float curve = 0.5f);
-    float WarpPhase(float t, float curve);
-    
 };
 
 }

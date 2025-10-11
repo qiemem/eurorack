@@ -44,6 +44,7 @@
 #include "stmlib/stmlib.h"
 #include "stmlib/utils/gate_flags.h"
 #include "stmlib/utils/random.h"
+#include "stages/envelope_utils.h"
 
 namespace stages {
 
@@ -134,26 +135,6 @@ void SegmentGenerator::Init(MultiMode multimode, stmlib::HysteresisQuantizer2* s
   step_quantizer_ = step_quantizer;
 
   audio_osc_.Init();
-}
-
-inline float SegmentGenerator::WarpPhase(float t, float curve) const {
-  curve -= 0.5f;
-  const bool flip = curve < 0.0f;
-  if (flip) {
-    t = 1.0f - t;
-  }
-  const float a = 128.0f * curve * curve;
-  t = (1.0f + a) * t / (1.0f + a * t);
-  if (flip) {
-    t = 1.0f - t;
-  }
-  return t;
-}
-
-inline float SegmentGenerator::RateToFrequency(float rate) const {
-  int32_t i = static_cast<int32_t>(rate * 2048.0f);
-  CONSTRAIN(i, 0, LUT_ENV_FREQUENCY_SIZE);
-  return lut_env_frequency[i];
 }
 
 inline float SegmentGenerator::PortamentoRateToLPCoefficient(float rate) const {

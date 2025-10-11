@@ -280,8 +280,8 @@ namespace stages {
       ui_->set_led(ch, gate ? LED_COLOR_RED : LED_COLOR_OFF);
 
       // Compute value and set as output
-      float value = envelope.Value();
       for (size_t i = 0; i < size; i++) {
+        float value = envelope.Value();
         block->output[ch][i] = settings_->dac_code(ch, value);
       }
 

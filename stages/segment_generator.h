@@ -293,8 +293,6 @@ class SegmentGenerator {
   static void
   ShapeSplineLFO(float shape, float frequencey, const float *input_phase,
                  SegmentGenerator::Output *out, size_t size, bool bipolar);
-  float WarpPhase(float t, float curve) const;
-  float RateToFrequency(float rate) const;
   float PortamentoRateToLPCoefficient(float rate) const;
 
   float phase_;
