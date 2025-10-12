@@ -1,17 +1,29 @@
-name: Make Wav
+name: Build Stages Firmware
 
 on:
+  push:
+    branches: [ bipolar ]
+  pull_request:
+    branches: [ bipolar ]
   workflow_dispatch:
 
 jobs:
-  build_wav:
-    name: build wav file
+  build_firmware:
+    name: Build ${{ matrix.config.name }}
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        config:
+          - name: "stages-${{ github.ref_name }}"
+            make_target: "wav"
+            output_path: "build/stages/stages.wav"
+          - name: "stages-${{ github.ref_name }}-flipped" 
+            make_target: "FLIPPED=1 wav"
+            output_path: "build/stages-flipped/stages-flipped.wav"
     env:
       TOOLCHAIN_PATH: ./arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/
 
     steps:
-    
     - uses: actions/checkout@v4
 
     - name: submodule init
@@ -25,27 +37,22 @@ jobs:
         sudo python2 get-pip.py
         python2 -m pip install numpy
 
-    - name: info
-      run: |
-        pwd
-        which python
-        which python2
-        python --version
-        python2 --version
-        
-    
     - name: setup arm toolchain
       run: |
         echo "Downloading to slightly different name to match name of extracted folder: arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi"
         wget --quiet -O "arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi" "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-arm-none-eabi.tar.xz?rev=e434b9ea4afc4ed7998329566b764309&hash=CA590209F5774EE1C96E6450E14A3E26"
         tar -xf arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi
 
-        
-    - name: make wav
-      run: make -f stages/makefile wav
+    - name: build and copy ${{ matrix.config.name }}
+      run: |
+        make -f stages/makefile ${{ matrix.config.make_target }}
+        short_sha=$(echo ${{ github.sha }} | cut -c1-7)
+        artifact_name="${{ matrix.config.name }}-$short_sha"
+        cp ${{ matrix.config.output_path }} $artifact_name.wav
+        echo "ARTIFACT_NAME=$artifact_name" >> $GITHUB_ENV
 
-    - name: upload wav
+    - name: upload ${{ matrix.config.name }}
       uses: actions/upload-artifact@v4
       with:
-        name: stages.wav
-        path: build/stages/stages.wav
+        name: ${{ env.ARTIFACT_NAME }}
+        path: ${{ env.ARTIFACT_NAME }}.wav
