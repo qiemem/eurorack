@@ -1,6 +1,8 @@
 #ifndef STAGES_6EG_ENVELOPE_H_
 #define STAGES_6EG_ENVELOPE_H_
 
+#include <inttypes.h>
+
 namespace stages {
 
 enum EnvelopeStage {
@@ -49,15 +51,15 @@ class Envelope {
   private:
     
     EnvelopeStage stage;
-    long stageTime;
+    uint32_t stageTime;
     float stageStartValue;
     
-    long delayLength;
-    long attackLength;
-    long holdLength;
-    long decayLength;
+    uint32_t delayLength;
+    uint32_t attackLength;
+    uint32_t holdLength;
+    uint32_t decayLength;
     float sustainLevel;
-    long releaseLength;
+    uint32_t releaseLength;
     
     float attackCurve;
     float decayCurve;
@@ -67,11 +69,11 @@ class Envelope {
     float value;
   
     void SetStage(EnvelopeStage stage);
-    void SetStageLength(float f, long *field);
+    void SetStageLength(float f, uint32_t *field);
     void SetStageCurve(float f, float *field);
-    bool HasStageLength(long *field);
+    bool HasStageLength(uint32_t *field);
     
-    float Interpolate(float from, float to, long time, long length, float curve = 0.5f);
+    float Interpolate(float from, float to, uint32_t time, uint32_t length, float curve = 0.5f);
 };
 
 }

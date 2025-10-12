@@ -1,9 +1,6 @@
 
 #include "stages/envelope.h"
-#include "stages/segment_generator.h"
 #include "stages/envelope_utils.h"
-
-#include <algorithm>
 
 namespace stages {
 
@@ -122,7 +119,7 @@ const float kMinStageLength = 0.001f;
     
   }
   
-  void Envelope::SetStageLength(float f, long *field) {
+  void Envelope::SetStageLength(float f, uint32_t *field) {
     
     // If factor is above threshold, set the length in time units, according to time scale.
     // Use a curve so smaller values can be dialed in more precisely, despite big time scales.
@@ -141,14 +138,14 @@ const float kMinStageLength = 0.001f;
     
   }
   
-  bool Envelope::HasStageLength(long *field) {
+  bool Envelope::HasStageLength(uint32_t *field) {
     
     // Return if it has a length bigger than zero, used for skipping stages and for slider LEDs
     return *field > 0L;
     
   }
   
-  float Envelope::Interpolate(float from, float to, long time, long length, float curve) {
+  float Envelope::Interpolate(float from, float to, uint32_t time, uint32_t length, float curve) {
     
     // Interpolate values depending on the amount of time elapsed in respoet to total length.
     // Interpolation is linear for curve = 0.5, ease-in for curve < 0.5, ease-out for curve > 0.5.
