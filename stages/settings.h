@@ -37,7 +37,7 @@
 
 namespace stages {
 
-const int kSaveDebounceMs = 5000;
+const int kSaveDebounceMs = 1000;
 
 struct ChannelCalibrationData {
   float adc_offset;
