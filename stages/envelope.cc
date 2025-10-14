@@ -27,10 +27,11 @@ namespace stages {
   }
 
   float Envelope::Value(bool gate_high) {
-    bool sustain_over = !gate_high;
     if (!gate && gate_high) SetStage(DELAY);
 
     phase += phaseIncrement[stage];
+    bool sustain_over = !gate_high
+      && (!HasMinSustain() || (stage == SUSTAIN && phase >= 1.0f) || (stage > SUSTAIN));
 
     // Compute stage transitions based on phase >= 1.0f. Cascades as SetStage
     // only resets phase if the target stage exists.

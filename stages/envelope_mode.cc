@@ -173,6 +173,7 @@ namespace stages {
     }
     if (slider_enabled_[4]) {
       did_modify_state |= envelope_manager_.SetSustainLevel(active_envelope_, block->slider[4]);
+      did_modify_state |= envelope_manager_.SetSustainLength(active_envelope_, block->pot[4]);
     }
     if (slider_enabled_[5]) {
       did_modify_state |= envelope_manager_.SetReleaseLength(active_envelope_, block->slider[5]);
@@ -214,6 +215,7 @@ namespace stages {
     // Set pots params
     envelope_manager_.SetAllAttackCurve (block->pot[1]);
     envelope_manager_.SetAllDecayCurve  (block->pot[3]);
+    envelope_manager_.SetAllSustainLength(block->pot[4]);
     envelope_manager_.SetAllReleaseCurve(block->pot[5]);
 
     // Set slider params

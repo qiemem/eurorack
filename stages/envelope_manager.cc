@@ -64,6 +64,7 @@ namespace stages {
         envelope.SetDecayLength(Uint8ToPotOrSlider(eg_state[IEG_DECAY_LENGTH]));
         envelope.SetDecayCurve(Uint8ToPotOrSlider(eg_state[IEG_DECAY_CURVE]));
         envelope.SetSustainLevel(Uint8ToPotOrSlider(eg_state[IEG_SUSTAIN_LEVEL]));
+        envelope.SetSustainLength(Uint8ToPotOrSlider(eg_state[IEG_SUSTAIN_LENGTH]));
         envelope.SetReleaseLength(Uint8ToPotOrSlider(eg_state[IEG_RELEASE_LENGTH]));
         envelope.SetReleaseCurve(Uint8ToPotOrSlider(eg_state[IEG_RELEASE_CURVE]));
       }
@@ -112,6 +113,12 @@ namespace stages {
     }
   }
 
+  void EnvelopeManager::SetAllSustainLength(float value) {
+    for (uint8_t envelope = 0; envelope < kNumChannels; ++envelope) {
+      get_envelope(envelope).SetSustainLength(value);
+    }
+  }
+
   void EnvelopeManager::SetAllReleaseLength(float value) {
     for (uint8_t envelope = 0; envelope < kNumChannels; ++envelope) {
       get_envelope(envelope).SetReleaseLength(value);
@@ -157,6 +164,11 @@ namespace stages {
   bool EnvelopeManager::SetSustainLevel(uint8_t channel, float value) {
     get_envelope(channel).SetSustainLevel(value);
     return SetIndependentEGState(channel, IEG_SUSTAIN_LEVEL, value);
+  }
+
+  bool EnvelopeManager::SetSustainLength(uint8_t channel, float value) {
+    get_envelope(channel).SetSustainLength(value);
+    return SetIndependentEGState(channel, IEG_SUSTAIN_LENGTH, value);
   }
 
   bool EnvelopeManager::SetReleaseLength(uint8_t channel, float value) {

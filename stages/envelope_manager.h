@@ -64,6 +64,7 @@ class EnvelopeManager {
   void SetAllDecayLength(float value);
   void SetAllDecayCurve(float value);
   void SetAllSustainLevel(float value);
+  void SetAllSustainLength(float value); // sets min sustain length
   void SetAllReleaseLength(float value);
   void SetAllReleaseCurve(float value);
 
@@ -83,6 +84,7 @@ class EnvelopeManager {
   bool SetDecayLength(uint8_t channel, float value);
   bool SetDecayCurve(uint8_t channel, float value);
   bool SetSustainLevel(uint8_t channel, float value);
+  bool SetSustainLength(uint8_t channel, float value); // sets min sustain length
   bool SetReleaseLength(uint8_t channel, float value);
   bool SetReleaseCurve(uint8_t channel, float value);
 

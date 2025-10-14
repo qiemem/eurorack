@@ -28,7 +28,9 @@ class Envelope {
     inline void SetAttackLength (float f) { SetStageLength(f, ATTACK ); };
     inline void SetHoldLength   (float f) { SetStageLength(f, HOLD   ); };
     inline void SetDecayLength  (float f) { SetStageLength(f, DECAY  ); };
-    inline void SetSustainLevel (float f) { sustainLevel = f - 0.001f;   };
+    inline void SetSustainLevel (float f) { sustainLevel = f - 0.001f;  };
+    // Sets minimum sustain time
+    inline void SetSustainLength(float f) { SetStageLength(f, SUSTAIN); };
     inline void SetReleaseLength(float f) { SetStageLength(f, RELEASE); };
     
     inline void SetAttackCurve (float f) { SetStageCurve(f, &attackCurve);  };
@@ -40,6 +42,7 @@ class Envelope {
     inline bool HasHold   () { return HasStage(HOLD   ); };
     inline bool HasDecay  () { return HasStage(DECAY  ); };
     inline bool HasSustain() { return sustainLevel > 0.001f; };
+    inline bool HasMinSustain() { return HasStage(SUSTAIN); };
     inline bool HasRelease() { return HasStage(RELEASE); };
     
     inline EnvelopeStage CurrentStage() { return stage; }
