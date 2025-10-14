@@ -44,10 +44,8 @@ class Envelope {
     
     inline EnvelopeStage CurrentStage() { return stage; }
     
-    void Gate(bool high);
-    
-    float Value();
-	
+    float Value(bool gate_high);
+
   private:
     
     EnvelopeStage stage;

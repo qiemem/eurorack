@@ -83,7 +83,7 @@ class EnvelopeMode {
 
   void ProcessSixIndependentEgs(IOBuffer::Block* block, size_t size);
   void ProcessSixIdenticalEgs(IOBuffer::Block* block, size_t size);
-  void ProcessEgs(IOBuffer::Block* block, size_t size);
+  void ProcessEGs(IOBuffer::Block* block, uint32_t manual_gates, size_t size);
 
   DISALLOW_COPY_AND_ASSIGN(EnvelopeMode);
 };

@@ -183,7 +183,7 @@ namespace stages {
       settings_->SaveStateWithDebounce();
     }
 
-    ProcessEgs(block, size);
+    ProcessEGs(block, 0, size);
     if (envelope_manager_.get_envelope(active_envelope_).CurrentStage()
         == IDLE) {
       ui_->set_led(active_envelope_, LED_COLOR_YELLOW);
@@ -224,28 +224,29 @@ namespace stages {
     envelope_manager_.SetAllSustainLevel (block->cv_slider[4]);
     envelope_manager_.SetAllReleaseLength(block->cv_slider[5]);
 
-    ProcessEgs(block, size);
+    uint32_t manual_gates = 0;
+    for (size_t ch=0; ch < kNumChannels; ch++) manual_gates |= ui_->switches().pressed(ch) << ch;
+    ProcessEGs(block, manual_gates, size);
   }
 
-  void EnvelopeMode::ProcessEgs(IOBuffer::Block* block, size_t size) {
+  void EnvelopeMode::ProcessEGs(IOBuffer::Block* block, uint32_t manual_gates, size_t size) {
     // Process each channel
-    bool gate = false;
+    uint32_t gates = 0;
     for (size_t ch = 0; ch < kNumChannels; ch++) {
 
-      // Check for gates. If the input is not patched, the previous channel's
+      // Check for gates. If the input is not patched or manually triggered, the previous channel's
       // gate status will be used.
-      if (block->input_patched[ch]) {
-        gate = false;
+      if ((manual_gates >> ch) & 1) {
+        gates = 0xffffffff; // only need `size` bits, but this is fine.
+      } else if (block->input_patched[ch]) {
+        gates = 0;
         for (size_t i = 0; i < size; i++) {
-          if (block->input[ch][i] & GATE_FLAG_HIGH) {
-            gate = true;
-            break;
-          }
+          // != 0 so we're not relying on GATE_FLAG_HIGH being 1.
+          gates |= ((block->input[ch][i] & GATE_FLAG_HIGH)!=0) << i;
         }
       }
 
       Envelope& envelope = envelope_manager_.get_envelope(ch);
-      envelope.Gate(gate);
 
       // Set LED to indicate stage of the channel's envelope. Active channel is lit rather than off when idle.
       switch (envelope.CurrentStage()) {
@@ -268,7 +269,7 @@ namespace stages {
 
       // Compute output values for each envelope
       for (size_t i = 0; i < size; i++) {
-        float value = envelope.Value();
+        float value = envelope.Value((gates >> i) & 1);
         block->output[ch][i] = settings_->dac_code(ch, value);
       }
     }
