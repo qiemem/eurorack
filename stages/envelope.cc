@@ -10,15 +10,14 @@ const float kMinStageLength = 0.001f;
   void Envelope::Init() {
     
     stage = IDLE;
-    stageTime = 0L;
+    phase = 0.0f;
     stageStartValue = 0.0f;
     
-    delayLength = 0L;
-    attackLength = 0L;
-    holdLength = 0L;
-    decayLength = 0L;
+    for (int i = 0; i < 7; i++) {
+      phaseIncrement[i] = 0.0f;
+    }
+    
     sustainLevel = 0.0f;
-    releaseLength = 0L;
     
     attackCurve = 0.5f;
     decayCurve = 0.5f;
@@ -65,21 +64,20 @@ const float kMinStageLength = 0.001f;
   
   float Envelope::Value() {
     
-    // Compute stage transitions (cascading)
-    if (stage == DELAY   && stageTime >= delayLength  ) SetStage(ATTACK );
-    if (stage == ATTACK  && stageTime >= attackLength ) SetStage(HOLD   );
-    if (stage == HOLD    && stageTime >= holdLength   ) SetStage(DECAY  );
-    if (stage == DECAY   && stageTime >= decayLength  ) SetStage(SUSTAIN);
-    if (stage == RELEASE && stageTime >= releaseLength) SetStage(IDLE   );
-    
-    // Increase elapsed time
-    if (stage != IDLE) stageTime++;
-    
-    // Compute new value
+    phase += phaseIncrement[stage];
+
+    // Compute stage transitions based on phase >= 1.0f. Cascades as SetStage only resets phase
+    // if the target stage exists.
+    if (stage == DELAY && phase >= 1.0f) SetStage(ATTACK);
+    if (stage == ATTACK && phase >= 1.0f) SetStage(HOLD);
+    if (stage == HOLD && phase >= 1.0f) SetStage(DECAY);
+    if (stage == DECAY && phase >= 1.0f) SetStage(SUSTAIN);
+    if (stage == RELEASE && phase >= 1.0f) SetStage(IDLE);
+
     switch (stage) {
       
       case ATTACK:
-        value = Interpolate(stageStartValue, 1.0f, stageTime, attackLength, attackCurve);
+        value = Interpolate(stageStartValue, 1.0f, phase, attackCurve);
         break;
       
       case HOLD:
@@ -87,7 +85,7 @@ const float kMinStageLength = 0.001f;
         break;
       
       case DECAY:
-        value = Interpolate(1.0f, sustainLevel, stageTime, decayLength, decayCurve);
+        value = Interpolate(1.0f, sustainLevel, phase, decayCurve);
         break;
       
       case SUSTAIN:
@@ -95,7 +93,7 @@ const float kMinStageLength = 0.001f;
         break;
       
       case RELEASE:
-        value = Interpolate(stageStartValue, 0.0f, stageTime, releaseLength, releaseCurve);
+        value = Interpolate(stageStartValue, 0.0f, phase, releaseCurve);
         break;
         
       default:
@@ -110,23 +108,25 @@ const float kMinStageLength = 0.001f;
   
   void Envelope::SetStage(EnvelopeStage s) {
     
-    // Set stage (if different than current) and restart the stage timer
+    // Set stage (if different than current) and reset the phase, but only if the stage exists.
     if (stage != s) {
       stage = s;
-      stageTime = 0L;
       stageStartValue = value;
+      if (HasStage(s)) phase = 0.0f;
     }
     
   }
   
-  void Envelope::SetStageLength(float f, uint32_t *field) {
+  void Envelope::SetStageLength(float f, EnvelopeStage stage) {
     
-    // If factor is above threshold, set the length in time units, according to time scale.
-    // Use a curve so smaller values can be dialed in more precisely, despite big time scales.
+    // If factor is above threshold, set the phase increment per sample, based on RateToFrequency.
+    // For stages with 0 duration (very fast), use a high increment to ensure immediate transition
     if (f >= kMinStageLength) {
-      *field = 1.0f / RateToFrequency(f);
+      phaseIncrement[stage] = RateToFrequency(f);
     } else {
-      *field = 0L;
+      // For zero duration stages, use an increment that ensures immediate transition.
+      // We use this to determine if a stage should be skipped.
+      phaseIncrement[stage] = 1.0f;
     }
     
   }
@@ -138,18 +138,18 @@ const float kMinStageLength = 0.001f;
     
   }
   
-  bool Envelope::HasStageLength(uint32_t *field) {
+  bool Envelope::HasStage(EnvelopeStage stage) {
     
-    // Return if it has a length bigger than zero, used for skipping stages and for slider LEDs
-    return *field > 0L;
+    // Return if it has a phase increment less than 1.0f (non-zero duration), 
+    // used for skipping stages and for slider LEDs
+    return phaseIncrement[stage] < 1.0f;
     
   }
   
-  float Envelope::Interpolate(float from, float to, uint32_t time, uint32_t length, float curve) {
+  float Envelope::Interpolate(float from, float to, float phase, float curve) {
     
-    // Interpolate values depending on the amount of time elapsed in respoet to total length.
     // Interpolation is linear for curve = 0.5, ease-in for curve < 0.5, ease-out for curve > 0.5.
-    float t = WarpPhase((float)time / length, curve);
+    float t = WarpPhase(phase, curve);
     return from + (to - from) * t;
     
   }

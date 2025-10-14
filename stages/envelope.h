@@ -6,13 +6,13 @@
 namespace stages {
 
 enum EnvelopeStage {
-  IDLE,
-  DELAY,
-  ATTACK,
-  HOLD,
-  DECAY,
-  SUSTAIN,
-  RELEASE
+  IDLE = 0,
+  DELAY = 1,
+  ATTACK = 2,
+  HOLD = 3,
+  DECAY = 4,
+  SUSTAIN = 5,
+  RELEASE = 6
 };
 
 class Envelope {
@@ -24,23 +24,23 @@ class Envelope {
     
     void Init();
     
-    inline void SetDelayLength  (float f) { SetStageLength(f, &delayLength  ); };
-    inline void SetAttackLength (float f) { SetStageLength(f, &attackLength ); };
-    inline void SetHoldLength   (float f) { SetStageLength(f, &holdLength   ); };
-    inline void SetDecayLength  (float f) { SetStageLength(f, &decayLength  ); };
-    inline void SetSustainLevel (float f) { sustainLevel = f - 0.001f;         };
-    inline void SetReleaseLength(float f) { SetStageLength(f, &releaseLength); };
+    inline void SetDelayLength  (float f) { SetStageLength(f, DELAY  ); };
+    inline void SetAttackLength (float f) { SetStageLength(f, ATTACK ); };
+    inline void SetHoldLength   (float f) { SetStageLength(f, HOLD   ); };
+    inline void SetDecayLength  (float f) { SetStageLength(f, DECAY  ); };
+    inline void SetSustainLevel (float f) { sustainLevel = f - 0.001f;   };
+    inline void SetReleaseLength(float f) { SetStageLength(f, RELEASE); };
     
     inline void SetAttackCurve (float f) { SetStageCurve(f, &attackCurve);  };
     inline void SetDecayCurve  (float f) { SetStageCurve(f, &decayCurve);   };
     inline void SetReleaseCurve(float f) { SetStageCurve(f, &releaseCurve); };
     
-    inline bool HasDelay  () { return HasStageLength(&delayLength  ); };
-    inline bool HasAttack () { return HasStageLength(&attackLength ); };
-    inline bool HasHold   () { return HasStageLength(&holdLength   ); };
-    inline bool HasDecay  () { return HasStageLength(&decayLength  ); };
-    inline bool HasSustain() { return sustainLevel > 0.001f;          };
-    inline bool HasRelease() { return HasStageLength(&releaseLength); };
+    inline bool HasDelay  () { return HasStage(DELAY  ); };
+    inline bool HasAttack () { return HasStage(ATTACK ); };
+    inline bool HasHold   () { return HasStage(HOLD   ); };
+    inline bool HasDecay  () { return HasStage(DECAY  ); };
+    inline bool HasSustain() { return sustainLevel > 0.001f; };
+    inline bool HasRelease() { return HasStage(RELEASE); };
     
     inline EnvelopeStage CurrentStage() { return stage; }
     
@@ -51,15 +51,11 @@ class Envelope {
   private:
     
     EnvelopeStage stage;
-    uint32_t stageTime;
+    float phase;
     float stageStartValue;
     
-    uint32_t delayLength;
-    uint32_t attackLength;
-    uint32_t holdLength;
-    uint32_t decayLength;
+    float phaseIncrement[7];  // indexed by EnvelopeStage enum: IDLE, DELAY, ATTACK, HOLD, DECAY, SUSTAIN, RELEASE
     float sustainLevel;
-    uint32_t releaseLength;
     
     float attackCurve;
     float decayCurve;
@@ -69,11 +65,11 @@ class Envelope {
     float value;
   
     void SetStage(EnvelopeStage stage);
-    void SetStageLength(float f, uint32_t *field);
+    void SetStageLength(float f, EnvelopeStage stage);
     void SetStageCurve(float f, float *field);
-    bool HasStageLength(uint32_t *field);
+    bool HasStage(EnvelopeStage stage);
     
-    float Interpolate(float from, float to, uint32_t time, uint32_t length, float curve = 0.5f);
+    float Interpolate(float from, float to, float phase, float curve = 0.5f);
 };
 
 }

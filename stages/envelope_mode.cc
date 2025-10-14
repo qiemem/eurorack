@@ -31,7 +31,6 @@ using namespace stmlib;
 
 namespace stages {
 
-  const int kSaveTimeWait = 20000; // 5 seconds
   const float kSliderMoveThreshold = 0.05f;
 
   void EnvelopeMode::Init(Settings* settings) {
@@ -145,6 +144,15 @@ namespace stages {
           }
         }
       }
+      // Check if slider has moved sufficiently to enable the slider for the
+      // active envelope.
+      if (abs(block->slider[ch] - initial_slider_positions_[ch]) > kSliderMoveThreshold) {
+        slider_enabled_[ch] = true;
+      }
+
+      // Set Slider LED to indicate whether slider is active for curent envelope.
+      ui_->set_slider_led(ch, slider_enabled_[ch], 1);
+
     }
 
     // Update envelope parameters for active envelope.
@@ -175,58 +183,10 @@ namespace stages {
       settings_->SaveStateWithDebounce();
     }
 
-    // Process each channel
-    bool gate = false;
-    for (size_t ch = 0; ch < kNumChannels; ch++) {
-
-      // Check if slider has moved sufficiently to enable the slider for the
-      // active envelope.
-      if (abs(block->slider[ch] - initial_slider_positions_[ch]) > kSliderMoveThreshold) {
-        slider_enabled_[ch] = true;
-      }
-
-      // Set Slider LED to indicate whether slider is active for curent envelope.
-      ui_->set_slider_led(ch, slider_enabled_[ch], 1);
-
-      // Check for gates. If the input is not patched, the previous channel's
-      // gate status will be used.
-      if (block->input_patched[ch]) {
-        gate = false;
-        for (size_t i = 0; i < size; i++) {
-          if (block->input[ch][i] & GATE_FLAG_HIGH) {
-            gate = true;
-            break;
-          }
-        }
-      }
-
-      Envelope& envelope = envelope_manager_.get_envelope(ch);
-      envelope.Gate(gate);
-
-      // Set LED to indicate stage of the channel's envelope. Active channel is lit rather than off when idle.
-      switch (envelope.CurrentStage()) {
-        case DELAY:
-        case ATTACK:
-        case HOLD:
-        case DECAY:
-          ui_->set_led(ch, LED_COLOR_GREEN);
-          break;
-        case SUSTAIN:
-          ui_->set_led(ch, LED_COLOR_YELLOW);
-          break;
-        case RELEASE:
-          ui_->set_led(ch, LED_COLOR_RED);
-          break;
-        default:
-          ui_->set_led(ch, ch == active_envelope_ ? LED_COLOR_YELLOW : LED_COLOR_OFF);
-          break;
-      }
-
-      // Compute output values for each envelope
-      for (size_t i = 0; i < size; i++) {
-        float value = envelope.Value();
-        block->output[ch][i] = settings_->dac_code(ch, value);
-      }
+    ProcessEgs(block, size);
+    if (envelope_manager_.get_envelope(active_envelope_).CurrentStage()
+        == IDLE) {
+      ui_->set_led(active_envelope_, LED_COLOR_YELLOW);
     }
   }
 
@@ -264,10 +224,18 @@ namespace stages {
     envelope_manager_.SetAllSustainLevel (block->cv_slider[4]);
     envelope_manager_.SetAllReleaseLength(block->cv_slider[5]);
 
-    for (size_t ch = 0; ch < kNumChannels; ++ch) {
-      // Gate or button?
-      bool gate = ui_->switches().pressed(ch);
-      if (!gate && block->input_patched[ch]) {
+    ProcessEgs(block, size);
+  }
+
+  void EnvelopeMode::ProcessEgs(IOBuffer::Block* block, size_t size) {
+    // Process each channel
+    bool gate = false;
+    for (size_t ch = 0; ch < kNumChannels; ch++) {
+
+      // Check for gates. If the input is not patched, the previous channel's
+      // gate status will be used.
+      if (block->input_patched[ch]) {
+        gate = false;
         for (size_t i = 0; i < size; i++) {
           if (block->input[ch][i] & GATE_FLAG_HIGH) {
             gate = true;
@@ -275,17 +243,11 @@ namespace stages {
           }
         }
       }
+
       Envelope& envelope = envelope_manager_.get_envelope(ch);
       envelope.Gate(gate);
-      ui_->set_led(ch, gate ? LED_COLOR_RED : LED_COLOR_OFF);
 
-      // Compute value and set as output
-      for (size_t i = 0; i < size; i++) {
-        float value = envelope.Value();
-        block->output[ch][i] = settings_->dac_code(ch, value);
-      }
-
-      // Display current stage
+      // Set LED to indicate stage of the channel's envelope. Active channel is lit rather than off when idle.
       switch (envelope.CurrentStage()) {
         case DELAY:
         case ATTACK:
@@ -304,8 +266,12 @@ namespace stages {
           break;
       }
 
+      // Compute output values for each envelope
+      for (size_t i = 0; i < size; i++) {
+        float value = envelope.Value();
+        block->output[ch][i] = settings_->dac_code(ch, value);
+      }
     }
-
   }
 
 }  // namespace stages
