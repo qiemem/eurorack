@@ -40,8 +40,7 @@ namespace stages {
 using namespace std;
 using namespace stmlib;
 
-void CvReader::Init(Settings* settings, ChainState* chain_state) {
-  chain_state_ = chain_state;
+void CvReader::Init(Settings* settings) {
   settings_ = settings;
   pots_adc_.Init();
   cv_adc_.Init();

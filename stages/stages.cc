@@ -38,7 +38,6 @@
 #include "stages/factory_test.h"
 #include "stages/io_buffer.h"
 #include "stages/oscillator.h"
-#include "stages/resources.h"
 #include "stages/envelope_mode.h"
 #include "stages/segment_generator.h"
 #include "stages/settings.h"
@@ -338,7 +337,7 @@ void Init() {
   }
   std::fill(&no_gate[0], &no_gate[kBlockSize], GATE_FLAG_LOW);
 
-  cv_reader.Init(&settings, &chain_state);
+  cv_reader.Init(&settings);
   eg_mode.Init(&settings);
   ui.Init(&settings, &chain_state, &cv_reader, &eg_mode);
   eg_mode.SetUI(&ui);

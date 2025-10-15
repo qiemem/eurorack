@@ -48,7 +48,7 @@ class CvReader {
   CvReader() { }
   ~CvReader() { }
 
-  void Init(Settings* settings, ChainState* chain_state);
+  void Init(Settings* settings);
   void Read(IOBuffer::Block* block);
   void Lock(int i);
   void Unlock(int i);
