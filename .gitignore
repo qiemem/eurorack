@@ -45,3 +45,10 @@ build
 *_BETA.sch
 *_beta.brd
 *_BETA.brd
+
+# IDE files
+.vscode
+*.code-workspace
+
+# WAV files generated for testing
+*.wav
