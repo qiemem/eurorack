@@ -26,6 +26,7 @@
 #include "stages/envelope_mode.h"
 #include "stages/ui.h"
 #include "stages/settings.h"
+#include "stages/macros.h"
 
 using namespace stmlib;
 
@@ -48,9 +49,7 @@ namespace stages {
     // Only necessary on startup, but simplifies code to apply on mode switching.
     warm_time_ = 2000;
 
-    // Disallow channel switching for one second on startup (and also every time
-    // the channel is switched - see below). 
-    active_channel_switch_time_ = 0;
+    fill(switch_pressed_time_, switch_pressed_time_ + kNumChannels, 0);
 
     // The index of the currently selected envelope. 
     active_envelope_ = 0;
@@ -110,8 +109,6 @@ namespace stages {
       return;
     }
 
-    if (active_channel_switch_time_ > 0) --active_channel_switch_time_;
-
     // If we need to set initial slider positions (from changing modes), record
     // the current slider positions.
     // Note that they will also be recorded when changing the active channel.
@@ -123,36 +120,35 @@ namespace stages {
     }
 
     // Handle for channel switch presses
-    for (size_t ch = 0; ch < kNumChannels; ++ch) {
-      // Check if button is pressed to switch channels or activate all sliders.
-      // Ignore switch presses if recently switched.
-      if (!active_channel_switch_time_ && ui_->switches().pressed(ch)) {
-        // Once a switch is pressed, delay processing switches for 1/4 second.
-        // This is essentially a super basic debounce.
-        active_channel_switch_time_ = 1000;
-
-        if (ch == active_envelope_) {      
+    ForEachChannel(ch) {
+      if (ui_->switches().pressed(ch)) {
+        switch_pressed_time_[ch]++;
+      } else if (switch_pressed_time_[ch] > 0) {
+        if (ch == active_envelope_) {
           // Pressing the active channel enables all sliders and pots
           fill(&slider_enabled_[0], &slider_enabled_[size], true);
         } else {
           // Pressing an inactive channel switches to that channel
-          // Record initial slider positions after switch and set all sliders to inactive
+          // Record initial slider positions after switch and set all sliders to
+          // inactive
           active_envelope_ = ch;
           fill(&slider_enabled_[0], &slider_enabled_[size], false);
-          for (size_t slider_index = 0; slider_index < kNumChannels; ++slider_index) {
-            initial_slider_positions_[slider_index] = block->slider[slider_index];
+          ForEachChannel(slider) {
+            initial_slider_positions_[slider] = block->slider[slider];
           }
         }
+        switch_pressed_time_[ch] = 0;
       }
       // Check if slider has moved sufficiently to enable the slider for the
       // active envelope.
-      if (abs(block->slider[ch] - initial_slider_positions_[ch]) > kSliderMoveThreshold) {
+      if (abs(block->slider[ch] - initial_slider_positions_[ch])
+          > kSliderMoveThreshold) {
         slider_enabled_[ch] = true;
       }
 
-      // Set Slider LED to indicate whether slider is active for curent envelope.
+      // Set Slider LED to indicate whether slider is active for curent
+      // envelope.
       ui_->set_slider_led(ch, slider_enabled_[ch], 1);
-
     }
 
     // Update envelope parameters for active envelope.
@@ -227,14 +223,14 @@ namespace stages {
     envelope_manager_.SetAllReleaseLength(block->cv_slider[5]);
 
     uint32_t manual_gates = 0;
-    for (size_t ch=0; ch < kNumChannels; ch++) manual_gates |= ui_->switches().pressed(ch) << ch;
+    ForEachChannel(ch) manual_gates |= ui_->switches().pressed(ch) << ch;
     ProcessEGs(block, manual_gates, size);
   }
 
   void EnvelopeMode::ProcessEGs(IOBuffer::Block* block, uint32_t manual_gates, size_t size) {
     // Process each channel
     uint32_t gates = 0;
-    for (size_t ch = 0; ch < kNumChannels; ch++) {
+    ForEachChannel(ch) {
 
       // Check for gates. If the input is not patched or manually triggered, the previous channel's
       // gate status will be used.

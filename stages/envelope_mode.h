@@ -65,9 +65,7 @@ class EnvelopeMode {
   // bootup delay before processing.
   int warm_time_;
 
-  // Disallow channel switching for one second on startup (and also every time
-  // the channel is switched - see below).
-  int active_channel_switch_time_;
+  uint16_t switch_pressed_time_[kNumChannels];
 
   // Initial slider positions (set when switching channels). This allows us to
   // determine once the user has moved a slider sufficiently.
