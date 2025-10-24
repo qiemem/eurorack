@@ -33,6 +33,10 @@ using namespace stmlib;
 namespace stages {
 
   const float kSliderMoveThreshold = 0.05f;
+  const float kOneSecond = kSampleRate / kBlockSize;
+  // Don't want to depend on chain_state (and also tick length is different here)
+  // so just make our own that's also half a second
+  const uint32_t kLongPressDuration = static_cast<uint32_t>(0.5f * kOneSecond);
 
   void EnvelopeMode::Init(Settings* settings) {
     settings_ = settings;
@@ -119,26 +123,35 @@ namespace stages {
       need_to_set_initial_slider_positions_ = false;
     }
 
+    bool did_modify_state = false;
+
     // Handle for channel switch presses
     ForEachChannel(ch) {
       if (ui_->switches().pressed(ch)) {
         switch_pressed_time_[ch]++;
-      } else if (switch_pressed_time_[ch] > 0) {
-        if (ch == active_envelope_) {
-          // Pressing the active channel enables all sliders and pots
-          fill(&slider_enabled_[0], &slider_enabled_[size], true);
-        } else {
-          // Pressing an inactive channel switches to that channel
-          // Record initial slider positions after switch and set all sliders to
-          // inactive
-          active_envelope_ = ch;
-          fill(&slider_enabled_[0], &slider_enabled_[size], false);
-          ForEachChannel(slider) {
-            initial_slider_positions_[slider] = block->slider[slider];
+      } else {
+        if (switch_pressed_time_[ch] > kLongPressDuration) {
+          did_modify_state |= envelope_manager_.SetLooping(
+            ch, !envelope_manager_.get_envelope(ch).IsLooping()
+          );
+        } else if (switch_pressed_time_[ch] > 0) {
+          if (ch == active_envelope_) {
+            // Pressing the active channel enables all sliders and pots
+            fill(&slider_enabled_[0], &slider_enabled_[kNumChannels], true);
+          } else {
+            // Pressing an inactive channel switches to that channel
+            // Record initial slider positions after switch and set all sliders
+            // to inactive
+            active_envelope_ = ch;
+            fill(&slider_enabled_[0], &slider_enabled_[kNumChannels], false);
+            ForEachChannel(slider) {
+              initial_slider_positions_[slider] = block->slider[slider];
+            }
           }
         }
         switch_pressed_time_[ch] = 0;
       }
+
       // Check if slider has moved sufficiently to enable the slider for the
       // active envelope.
       if (abs(block->slider[ch] - initial_slider_positions_[ch])
@@ -151,8 +164,6 @@ namespace stages {
       ui_->set_slider_led(ch, slider_enabled_[ch], 1);
     }
 
-    // Update envelope parameters for active envelope.
-    bool did_modify_state = false;
     if (slider_enabled_[0]) {
       did_modify_state |= envelope_manager_.SetDelayLength(active_envelope_, block->slider[0]);
     }

@@ -13,7 +13,7 @@ namespace stages {
     stageStartValue = 0.0f;
 
     for (int i = 0; i < 7; i++) {
-      phaseIncrement[i] = 0.0f;
+      phaseIncrement[i] = 1.0f;
     }
 
     sustainLevel = 0.0f;
@@ -24,28 +24,29 @@ namespace stages {
 
     gate = false;
     value = 0.0f;
+
+    loop = false;
   }
 
   float Envelope::Value(bool gate_high) {
-    if (!gate && gate_high) SetStage(DELAY);
-
     phase += phaseIncrement[stage];
-    bool sustain_over = !gate_high
-      && (!HasMinSustain() || (stage == SUSTAIN && phase >= 1.0f) || (stage > SUSTAIN));
 
     // Compute stage transitions based on phase >= 1.0f. Cascades as SetStage
     // only resets phase if the target stage exists.
-    if (!sustain_over) {
-      if (stage == DELAY && phase >= 1.0f) SetStage(ATTACK);
-      if (stage == ATTACK && phase >= 1.0f) SetStage(HOLD);
-      if (stage == HOLD && phase >= 1.0f) SetStage(DECAY);
-      if (stage == DECAY && phase >= 1.0f) SetStage(SUSTAIN);
-    } else {
-      // Didn't start or value is already 0 => just go to IDLE
-      if (stage == DELAY || value < 0.01f) SetStage(IDLE);
-      else SetStage(RELEASE);
-    }
+    if (!gate && gate_high) SetStage(DELAY);
+    if (stage == IDLE && IsLooping()) SetStage(DELAY);
+    if (stage == DELAY && phase >= 1.0f) SetStage(ATTACK);
+    if (stage == ATTACK && phase >= 1.0f) SetStage(HOLD);
+    if (stage == HOLD && phase >= 1.0f) SetStage(DECAY);
+    if (stage == DECAY && phase >= 1.0f) SetStage(SUSTAIN);
+    bool sustain_time_done = stage == SUSTAIN && phase >= 1.0f;
+    bool exit_sustain = IsLooping()
+      ? sustain_time_done
+      : !gate_high && (!HasMinSustain() || sustain_time_done) && stage != IDLE
+        && stage != RELEASE;
+    if (exit_sustain) SetStage(stage != DELAY ? RELEASE : IDLE);
     if (stage == RELEASE && phase >= 1.0f) SetStage(IDLE);
+    // We're okay spending one sample in IDLE when looping
 
     switch (stage) {
 

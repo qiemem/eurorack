@@ -40,6 +40,19 @@
 #include "stages/io_buffer.h"
 
 namespace stages {
+const uint8_t kNoiseTolerance = 1;
+
+inline uint8_t PotOrSliderToUint8(float value) {
+  float result = value * 256.0f;
+  CONSTRAIN(result, 0, 255);
+  return result;
+}
+
+inline  float Uint8ToPotOrSlider(uint8_t value) {
+  CONSTRAIN(value, 0, 255);
+  return value / 256.0f;
+}
+
 
 class Settings;
 
@@ -87,6 +100,8 @@ class EnvelopeManager {
   bool SetSustainLength(uint8_t channel, float value); // sets min sustain length
   bool SetReleaseLength(uint8_t channel, float value);
   bool SetReleaseCurve(uint8_t channel, float value);
+
+  bool SetLooping(uint8_t channel, bool looping);
 
   Envelope& get_envelope(uint8_t channel) { return eg_[channel]; }
 

@@ -86,7 +86,7 @@ struct PersistentData {
 // - byte 6: decay length
 // - byte 7: decay curve
 // - byte 8: sustain level
-// - byte 9: -- padding --
+// - byte 9: min sustain length
 // - byte 10: release level
 // - byte 11: release curve
 enum IEGParam : uint8_t {
@@ -104,13 +104,23 @@ enum IEGParam : uint8_t {
 
 #define is_bipolar(seg_config) seg_config & 0x08
 
+// Should be okay to use bitfields here as arm uses consistent ordering of
+// fields (first in lowest address)
 struct State {
   uint16_t segment_configuration[kNumChannels];
-  uint8_t color_blind;
-  uint8_t multimode;
+  uint8_t color_blind : 1;
+  uint8_t multimode : 3;
+  uint8_t : 0;
+  uint8_t independent_eg_looping : kNumChannels;
+  uint8_t : 0;
   uint8_t independent_eg_state[kNumChannels][12];
-  enum { tag = 0x54415453 };  // STAT
+  enum { tag = 0x54415453 }; // STAT
 };
+// ensure padding and alignment are as expected
+static_assert(
+  sizeof(State) == 6 * 2 + 1 + 1 + 12 * 6,
+  "State struct size has changed - this will break saved settings in flash!"
+);
 
 class Settings {
  public:

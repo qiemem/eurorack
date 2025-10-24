@@ -36,7 +36,9 @@ class Envelope {
     inline void SetAttackCurve (float f) { SetStageCurve(f, &attackCurve);  };
     inline void SetDecayCurve  (float f) { SetStageCurve(f, &decayCurve);   };
     inline void SetReleaseCurve(float f) { SetStageCurve(f, &releaseCurve); };
-    
+
+    inline void SetLooping(bool l) { loop = l; }
+
     inline bool HasDelay  () { return HasStage(DELAY  ); };
     inline bool HasAttack () { return HasStage(ATTACK ); };
     inline bool HasHold   () { return HasStage(HOLD   ); };
@@ -44,6 +46,7 @@ class Envelope {
     inline bool HasSustain() { return sustainLevel > 0.001f; };
     inline bool HasMinSustain() { return HasStage(SUSTAIN); };
     inline bool HasRelease() { return HasStage(RELEASE); };
+    inline bool IsLooping() { return loop; }
     
     inline EnvelopeStage CurrentStage() { return stage; }
     
@@ -63,6 +66,7 @@ class Envelope {
     float releaseCurve;
     
     bool gate;
+    bool loop;
     float value;
   
     void SetStage(EnvelopeStage stage);

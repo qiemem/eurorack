@@ -29,21 +29,6 @@
 
 namespace stages {
 
-  const uint8_t kNoiseTolerance = 1;
-
-  uint8_t PotOrSliderToUint8(float value) {
-    float result = value * 256.0f;
-    CONSTRAIN(result, 0, 255);
-    return result;
-  }
-
-  // Convert a uint16_t on an integer [0, 255] range to a [-1., 2.) range
-  // suitable for a pot or slider.
-  float Uint8ToPotOrSlider(uint8_t value) {
-    CONSTRAIN(value, 0, 255);
-    return value / 256.0f;
-  }
-
   void EnvelopeManager::Init(Settings* settings) {
     settings_ = settings;
     ReInit();
@@ -67,6 +52,7 @@ namespace stages {
         envelope.SetSustainLength(Uint8ToPotOrSlider(eg_state[IEG_SUSTAIN_LENGTH]));
         envelope.SetReleaseLength(Uint8ToPotOrSlider(eg_state[IEG_RELEASE_LENGTH]));
         envelope.SetReleaseCurve(Uint8ToPotOrSlider(eg_state[IEG_RELEASE_CURVE]));
+        envelope.SetLooping((settings_->state().independent_eg_looping >> i) & 1);
       }
     }
   }
@@ -181,6 +167,17 @@ namespace stages {
     return SetIndependentEGState(channel, IEG_RELEASE_CURVE, value);
   }
 
+  bool EnvelopeManager::SetLooping(uint8_t channel, bool looping) {
+    get_envelope(channel).SetLooping(looping);
+    uint8_t loop_settings = settings_->mutable_state()->independent_eg_looping;
+    if (((loop_settings >> channel) & 1) != looping) {
+      loop_settings ^= 1 << channel;
+      settings_->mutable_state()->independent_eg_looping = loop_settings;
+      return true;
+    }
+    return false;
+  }
+
   bool EnvelopeManager::SetIndependentEGState(uint8_t channel, uint8_t state_offset, float value) {
     uint8_t* eg_state = settings_->mutable_state()->independent_eg_state[channel];
     uint8_t existing_value = eg_state[state_offset];
@@ -193,4 +190,4 @@ namespace stages {
     return false;
   }
 
-}  // namespace stages
+} // namespace stages
