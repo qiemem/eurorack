@@ -28,92 +28,94 @@
 // Manages a collection of DAHDSR (Delay, Attack, Hold, Decay, Sustain, Release)
 // envelopes.
 //
-// The DAHDSR envelope generator is a multi-channel, 6-stage (per channel) envelope
-// generator. Each stage is independently configurable.
+// The DAHDSR envelope generator is a multi-channel, 6-stage (per channel)
+// envelope generator. Each stage is independently configurable.
 
 #ifndef STAGES_ENVELOPE_MANAGER_H
 #define STAGES_ENVELOPE_MANAGER_H
 
-#include "stmlib/stmlib.h"
-
 #include "stages/envelope.h"
 #include "stages/io_buffer.h"
+#include "stmlib/stmlib.h"
 
 namespace stages {
-const uint8_t kNoiseTolerance = 1;
+  const uint8_t kNoiseTolerance = 1;
 
-inline uint8_t PotOrSliderToUint8(float value) {
-  float result = value * 256.0f;
-  CONSTRAIN(result, 0, 255);
-  return result;
-}
+  inline uint8_t PotOrSliderToUint8(float value) {
+    float result = value * 256.0f;
+    CONSTRAIN(result, 0, 255);
+    return static_cast<uint8_t>(result);
+  }
 
-inline  float Uint8ToPotOrSlider(uint8_t value) {
-  CONSTRAIN(value, 0, 255);
-  return value / 256.0f;
-}
+  inline float Uint8ToPotOrSlider(uint8_t value) {
+    CONSTRAIN(value, 0, 255);
+    return static_cast<float>(value) / 256.0f;
+  }
 
+  class Settings;
 
-class Settings;
+  class EnvelopeManager {
+  public:
+    EnvelopeManager() = default;
+    ~EnvelopeManager() = default;
 
-class EnvelopeManager {
- public:
-  EnvelopeManager() { }
-  ~EnvelopeManager() { }
+    void Init(Settings* settings);
+    void ReInit();
 
-  void Init(Settings* settings);
-  void ReInit();
+    // Sets the given value on all envelopes. Does NOT store the values in
+    // state. This is used in identical eg mode where the envelopes reflect the
+    // current slider positions at all times (and so don't need state stored).
+    //
+    // It is recommended to use these functions over setting envelope values
+    // directly.
+    void SetAllDelayLength(float value);
+    void SetAllAttackLength(float value);
+    void SetAllAttackCurve(float value);
+    void SetAllHoldLength(float value);
+    void SetAllDecayLength(float value);
+    void SetAllDecayCurve(float value);
+    void SetAllSustainLevel(float value);
+    void SetAllSustainLength(float value); // sets min sustain length
+    void SetAllReleaseLength(float value);
+    void SetAllReleaseCurve(float value);
 
-  // Sets the given value on all envelopes. Does NOT store the values in state.
-  // This is used in identical eg mode where the envelopes reflect the current
-  // slider positions at all times (and so don't need state stored).
-  //
-  // It is recommended to use these functions over setting envelope values
-  // directly.
-  void SetAllDelayLength(float value);
-  void SetAllAttackLength(float value);
-  void SetAllAttackCurve(float value);
-  void SetAllHoldLength(float value);
-  void SetAllDecayLength(float value);
-  void SetAllDecayCurve(float value);
-  void SetAllSustainLevel(float value);
-  void SetAllSustainLength(float value); // sets min sustain length
-  void SetAllReleaseLength(float value);
-  void SetAllReleaseCurve(float value);
+    // Sets the given value on the given envelope channel. Also stores the value
+    // in state. This is used in individual eg mode where the envelopes do not
+    // necessarily reflect the current slider positions. State is stored so that
+    // envelope values survive power cycles.
+    //
+    // It is recommended to use these functions over setting envelope values
+    // directly.
+    void SetDelayLength(uint8_t channel, float value);
+    void SetAttackLength(uint8_t channel, float value);
+    void SetAttackCurve(uint8_t channel, float value);
+    void SetHoldLength(uint8_t channel, float value);
+    void SetDecayLength(uint8_t channel, float value);
+    void SetDecayCurve(uint8_t channel, float value);
+    void SetSustainLevel(uint8_t channel, float value);
+    void SetSustainLength(
+      uint8_t channel, float value
+    ); // sets min sustain length
+    void SetReleaseLength(uint8_t channel, float value);
+    void SetReleaseCurve(uint8_t channel, float value);
 
-  // Sets the given value on the given envelope channel. Also stores the value
-  // in state. This is used in individual eg mode where the envelopes do not
-  // necessarily reflect the current slider positions. State is stored so that
-  // envelope values survive power cycles.
-  // Returns true if state was modified (new value is different from existing
-  // value by more than a noise tolerance).
-  //
-  // It is recommended to use these functions over setting envelope values
-  // directly.
-  bool SetDelayLength(uint8_t channel, float value);
-  bool SetAttackLength(uint8_t channel, float value);
-  bool SetAttackCurve(uint8_t channel, float value);
-  bool SetHoldLength(uint8_t channel, float value);
-  bool SetDecayLength(uint8_t channel, float value);
-  bool SetDecayCurve(uint8_t channel, float value);
-  bool SetSustainLevel(uint8_t channel, float value);
-  bool SetSustainLength(uint8_t channel, float value); // sets min sustain length
-  bool SetReleaseLength(uint8_t channel, float value);
-  bool SetReleaseCurve(uint8_t channel, float value);
+    void SetLooping(uint8_t channel, bool looping);
 
-  bool SetLooping(uint8_t channel, bool looping);
+    Envelope& get_envelope(uint8_t channel) {
+      return eg_[channel];
+    }
 
-  Envelope& get_envelope(uint8_t channel) { return eg_[channel]; }
+  private:
+    Settings* settings_;
+    Envelope eg_[kNumChannels];
 
- private:
-  Settings* settings_;
-  Envelope eg_[kNumChannels];
+    void SetIndependentEGState(
+      uint8_t channel, uint8_t state_offset, float value
+    );
 
-  bool SetIndependentEGState(uint8_t channel, uint8_t state_offset, float value);
+    DISALLOW_COPY_AND_ASSIGN(EnvelopeManager);
+  };
 
-  DISALLOW_COPY_AND_ASSIGN(EnvelopeManager);
-};
+} // namespace stages
 
-}  // namespace stages
-
-#endif  // STAGES_ENVELOPE_MANAGER_H
+#endif // STAGES_ENVELOPE_MANAGER_H

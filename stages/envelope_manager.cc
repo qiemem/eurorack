@@ -22,10 +22,9 @@
 //
 // See http://creativecommons.org/licenses/MIT/ for more information.
 
-
 #include "stages/envelope_manager.h"
-#include "stages/ui.h"
 #include "stages/settings.h"
+#include "stages/ui.h"
 
 namespace stages {
 
@@ -43,16 +42,28 @@ namespace stages {
         const uint8_t* eg_state = settings_->state().independent_eg_state[i];
         Envelope& envelope = get_envelope(i);
         envelope.SetDelayLength(Uint8ToPotOrSlider(eg_state[IEG_DELAY_LENGTH]));
-        envelope.SetAttackLength(Uint8ToPotOrSlider(eg_state[IEG_ATTACK_LENGTH]));
+        envelope.SetAttackLength(
+          Uint8ToPotOrSlider(eg_state[IEG_ATTACK_LENGTH])
+        );
         envelope.SetAttackCurve(Uint8ToPotOrSlider(eg_state[IEG_ATTACK_CURVE]));
         envelope.SetHoldLength(Uint8ToPotOrSlider(eg_state[IEG_HOLD_LENGTH]));
         envelope.SetDecayLength(Uint8ToPotOrSlider(eg_state[IEG_DECAY_LENGTH]));
         envelope.SetDecayCurve(Uint8ToPotOrSlider(eg_state[IEG_DECAY_CURVE]));
-        envelope.SetSustainLevel(Uint8ToPotOrSlider(eg_state[IEG_SUSTAIN_LEVEL]));
-        envelope.SetSustainLength(Uint8ToPotOrSlider(eg_state[IEG_SUSTAIN_LENGTH]));
-        envelope.SetReleaseLength(Uint8ToPotOrSlider(eg_state[IEG_RELEASE_LENGTH]));
-        envelope.SetReleaseCurve(Uint8ToPotOrSlider(eg_state[IEG_RELEASE_CURVE]));
-        envelope.SetLooping((settings_->state().independent_eg_looping >> i) & 1);
+        envelope.SetSustainLevel(
+          Uint8ToPotOrSlider(eg_state[IEG_SUSTAIN_LEVEL])
+        );
+        envelope.SetSustainLength(
+          Uint8ToPotOrSlider(eg_state[IEG_SUSTAIN_LENGTH])
+        );
+        envelope.SetReleaseLength(
+          Uint8ToPotOrSlider(eg_state[IEG_RELEASE_LENGTH])
+        );
+        envelope.SetReleaseCurve(
+          Uint8ToPotOrSlider(eg_state[IEG_RELEASE_CURVE])
+        );
+        envelope.SetLooping(
+          (settings_->state().independent_eg_looping >> i) & 1
+        );
       }
     }
   }
@@ -117,77 +128,77 @@ namespace stages {
     }
   }
 
-  bool EnvelopeManager::SetDelayLength(uint8_t channel, float value) {
+  void EnvelopeManager::SetDelayLength(uint8_t channel, float value) {
     get_envelope(channel).SetDelayLength(value);
-    return SetIndependentEGState(channel, IEG_DELAY_LENGTH, value);
+    SetIndependentEGState(channel, IEG_DELAY_LENGTH, value);
   }
 
-  bool EnvelopeManager::SetAttackLength(uint8_t channel, float value) {
+  void EnvelopeManager::SetAttackLength(uint8_t channel, float value) {
     get_envelope(channel).SetAttackLength(value);
-    return SetIndependentEGState(channel, IEG_ATTACK_LENGTH, value);
+    SetIndependentEGState(channel, IEG_ATTACK_LENGTH, value);
   }
 
-  bool EnvelopeManager::SetAttackCurve(uint8_t channel, float value) {
+  void EnvelopeManager::SetAttackCurve(uint8_t channel, float value) {
     get_envelope(channel).SetAttackCurve(value);
-    return SetIndependentEGState(channel, IEG_ATTACK_CURVE, value);
+    SetIndependentEGState(channel, IEG_ATTACK_CURVE, value);
   }
 
-  bool EnvelopeManager::SetHoldLength(uint8_t channel, float value) {
+  void EnvelopeManager::SetHoldLength(uint8_t channel, float value) {
     get_envelope(channel).SetHoldLength(value);
-    return SetIndependentEGState(channel, IEG_HOLD_LENGTH, value);
+    SetIndependentEGState(channel, IEG_HOLD_LENGTH, value);
   }
 
-  bool EnvelopeManager::SetDecayLength(uint8_t channel, float value) {
+  void EnvelopeManager::SetDecayLength(uint8_t channel, float value) {
     get_envelope(channel).SetDecayLength(value);
-    return SetIndependentEGState(channel, IEG_DECAY_LENGTH, value);
+    SetIndependentEGState(channel, IEG_DECAY_LENGTH, value);
   }
 
-  bool EnvelopeManager::SetDecayCurve(uint8_t channel, float value) {
+  void EnvelopeManager::SetDecayCurve(uint8_t channel, float value) {
     get_envelope(channel).SetDecayCurve(value);
-    return SetIndependentEGState(channel, IEG_DECAY_CURVE, value);
+    SetIndependentEGState(channel, IEG_DECAY_CURVE, value);
   }
 
-  bool EnvelopeManager::SetSustainLevel(uint8_t channel, float value) {
+  void EnvelopeManager::SetSustainLevel(uint8_t channel, float value) {
     get_envelope(channel).SetSustainLevel(value);
-    return SetIndependentEGState(channel, IEG_SUSTAIN_LEVEL, value);
+    SetIndependentEGState(channel, IEG_SUSTAIN_LEVEL, value);
   }
 
-  bool EnvelopeManager::SetSustainLength(uint8_t channel, float value) {
+  void EnvelopeManager::SetSustainLength(uint8_t channel, float value) {
     get_envelope(channel).SetSustainLength(value);
-    return SetIndependentEGState(channel, IEG_SUSTAIN_LENGTH, value);
+    SetIndependentEGState(channel, IEG_SUSTAIN_LENGTH, value);
   }
 
-  bool EnvelopeManager::SetReleaseLength(uint8_t channel, float value) {
+  void EnvelopeManager::SetReleaseLength(uint8_t channel, float value) {
     get_envelope(channel).SetReleaseLength(value);
-    return SetIndependentEGState(channel, IEG_RELEASE_LENGTH, value);
+    SetIndependentEGState(channel, IEG_RELEASE_LENGTH, value);
   }
 
-  bool EnvelopeManager::SetReleaseCurve(uint8_t channel, float value) {
+  void EnvelopeManager::SetReleaseCurve(uint8_t channel, float value) {
     get_envelope(channel).SetReleaseCurve(value);
-    return SetIndependentEGState(channel, IEG_RELEASE_CURVE, value);
+    SetIndependentEGState(channel, IEG_RELEASE_CURVE, value);
   }
 
-  bool EnvelopeManager::SetLooping(uint8_t channel, bool looping) {
+  void EnvelopeManager::SetLooping(uint8_t channel, bool looping) {
     get_envelope(channel).SetLooping(looping);
     uint8_t loop_settings = settings_->mutable_state()->independent_eg_looping;
     if (((loop_settings >> channel) & 1) != looping) {
       loop_settings ^= 1 << channel;
       settings_->mutable_state()->independent_eg_looping = loop_settings;
-      return true;
+      settings_->SaveStateWithDebounce();
     }
-    return false;
   }
 
-  bool EnvelopeManager::SetIndependentEGState(uint8_t channel, uint8_t state_offset, float value) {
-    uint8_t* eg_state = settings_->mutable_state()->independent_eg_state[channel];
+  void EnvelopeManager::SetIndependentEGState(
+    uint8_t channel, uint8_t state_offset, float value
+  ) {
+    uint8_t* eg_state
+      = settings_->mutable_state()->independent_eg_state[channel];
     uint8_t existing_value = eg_state[state_offset];
     uint8_t converted = PotOrSliderToUint8(value);
     if (abs(converted - existing_value) > kNoiseTolerance) {
-        eg_state[state_offset] = converted;
-        return true;
+      eg_state[state_offset] = converted;
+      settings_->SaveStateWithDebounce();
     }
-
-    return false;
   }
 
 } // namespace stages
