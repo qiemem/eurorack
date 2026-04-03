@@ -1,5 +1,8 @@
 # Be sure to run clangd with --query-driver=/path/to/arm-none-eabi-g++
 CompileFlags:
+  Add:
+    - -Wpadding
+    - -Wpacked
   Remove:
     - -mthumb-interwork
     - -fno-move-loop-invariants
