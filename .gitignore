@@ -52,3 +52,8 @@ build
 
 # WAV files generated for testing
 *.wav
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov

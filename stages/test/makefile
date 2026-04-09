@@ -68,6 +68,30 @@ perf:		stages_perf
 	./stages_perf
 
 clean:
-	rm $(BUILD_DIR)*.*
+	-rm $(BUILD_DIR)*.*
 
-include $(DEP_FILE)
+# Unit tests
+UNIT_DIR      = stages/test/unit
+UNIT_SOURCES  = $(wildcard $(UNIT_DIR)/*.cc)
+UNIT_TARGETS  = $(patsubst $(UNIT_DIR)/%.cc,%,$(UNIT_SOURCES))
+
+UNIT_COMMON_OBJS = $(BUILD_DIR)envelope.o $(BUILD_DIR)resources.o
+
+unit: $(BUILD_DIR) $(UNIT_TARGETS)
+	@for t in $(UNIT_TARGETS); do $(BUILD_DIR)$$t; done
+
+coverage: clean $(BUILD_DIR)resources.o
+	g++ -c -DTEST -g -Wall -Werror -msse2 -Wno-unused-variable -O2 -I. -fprofile-arcs -ftest-coverage stages/envelope.cc -o $(BUILD_DIR)envelope.o
+	g++ -c -DTEST -g -Wall -Werror -msse2 -Wno-unused-variable -O2 -I. -fpermissive -fprofile-arcs -ftest-coverage $(UNIT_DIR)/test_envelope.cc -o $(BUILD_DIR)test_envelope.o
+	g++ -g -o $(BUILD_DIR)test_envelope $(BUILD_DIR)test_envelope.o $(BUILD_DIR)envelope.o $(BUILD_DIR)resources.o -lm -fprofile-arcs -ftest-coverage
+	$(BUILD_DIR)test_envelope
+	@gcov -o $(BUILD_DIR) $(BUILD_DIR)envelope.o
+
+$(BUILD_DIR)%.o: $(UNIT_DIR)/%.cc
+	g++ -c -DTEST -g -Wall -Werror -msse2 -Wno-unused-variable -O2 -I. -fpermissive $(CXXFLAGS) $< -o $(BUILD_DIR)$(@F)
+
+$(UNIT_TARGETS): %: $(BUILD_DIR)%.o $(UNIT_COMMON_OBJS)
+	g++ -g -o $(BUILD_DIR)$@ $(BUILD_DIR)$(@F).o $(UNIT_COMMON_OBJS) -lm $(LINKFLAGS)
+
+unitclean:
+	rm -f $(BUILD_DIR)*.o $(BUILD_DIR)/test_envelope
