@@ -442,6 +442,28 @@ TOOLCHAIN_PATH=/path/to/arm-gnu-toolchain-x.x.x-platform-arm-none-eabi/ FLIPPED=
 aplay -V mono build/stages/stages.wav
 ```
 
+Flashing over JTAG / SWD
+------------------------
+
+If you have a JTAG/SWD probe (ST-Link, J-Link, or an FTDI-based adapter) wired to the module's programming header, you can flash Stages directly instead of using the audio bootloader.
+
+The firmware is built for every commit by GitHub Actions and uploaded to the [Actions tab](../../actions). Open the latest run of the **Build Stages JTAG Firmware** workflow and download the artifact you want:
+
+- `stages-<branch>-jtag-<sha>` — standard panel.
+- `stages-<branch>-flipped-jtag-<sha>` — flipped panel (for using Stages upside down).
+
+Each artifact unzips to a `.hex` and a `.bin` of the same name. Both are the combined bootloader + application image, i.e. the full flash starting at `0x08000000`:
+
+- **`.hex`** — load addresses are embedded, so just program the file. Works directly with `openocd`, STM32CubeProgrammer, ST-LINK Utility, J-Flash, etc.
+- **`.bin`** — raw binary with no address info, so you must tell the tool to flash it at `0x08000000`.
+
+If you are building locally instead, you must build the bootloader first (it is a separate make project that the combined image depends on), then build and flash the combined image via an attached probe:
+
+```
+TOOLCHAIN_PATH=/path/to/arm-gnu-toolchain-x.x.x-platform-arm-none-eabi/ make -f stages/bootloader/makefile
+TOOLCHAIN_PATH=/path/to/arm-gnu-toolchain-x.x.x-platform-arm-none-eabi/ make -f stages/makefile upload_combo_jtag_erase_first
+```
+
 Changelog
 ---------
 
